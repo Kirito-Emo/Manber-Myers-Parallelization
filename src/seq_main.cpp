@@ -26,7 +26,9 @@ int main(int argc, char *argv[])
     for (int i = 0; i < n; ++i)
         text[i] = static_cast<unsigned char>(input[i]);
 
-    // Allocate all necessary work arrays
+    // --- SUFFIX ARRAY ---
+
+    // Allocate workspace
     std::vector<int> sa(n), rank(n), cnt(n), next(n), lcp(n);
     std::vector<bool> bh(n), b2h(n);
 
@@ -38,27 +40,36 @@ int main(int argc, char *argv[])
 
     // Measuring the time taken to build the suffix and LCP arrays
     auto t1 = std::chrono::steady_clock::now();
-    double elapsed_s = std::chrono::duration<double>(t1 - t0).count();
+    double time_sa = std::chrono::duration<double>(t1 - t0).count();
 
-    // Report the time taken
-    std::cout << "Time taken to build suffix array and LCP array\n";
-    std::cout << "n=" << n << "   time_build=" << elapsed_s << " s\n\n";
-
-    // Find the maximum LCP value—and its position
-    int max_lcp = 0, idx = 0;
+    // Find max LCP and its position
+    int max_lcp = 0, pos_sa = 0;
     for (int i = 1; i < n; ++i)
     {
         if (lcp[i] > max_lcp)
         {
             max_lcp = lcp[i];
-            idx = sa[i];
+            pos_sa = sa[i];
         }
     }
 
-    // Output the result
-    std::cout << "LCP array report\n";
-    std::cout << "n=" << n << "   time_build=" << elapsed_s << " s"
-              << "   max_lcp=" << max_lcp << "   pos=" << idx << "\n";
+    // Report Suffix-Array + LCP results
+    std::cout << "=== Suffix‐Array + LCP ===\n";
+    std::cout << "n=" << n << " MB   time_build=" << time_sa << " s\n";
+    std::cout << "max_lrs_len=" << max_lcp << "   pos=" << pos_sa << "\n\n";
+
+    // --- SUFFIX TREE ---
+    auto t2 = std::chrono::steady_clock::now();
+    SuffixTree st(text); // Build the suffix tree
+    auto [len_st, pos_st] = st.LRS(); // Find the longest repeated substring
+    auto t3 = std::chrono::steady_clock::now();
+
+    double time_st = std::chrono::duration<double>(t3 - t2).count();
+
+    // Report Suffix-Tree + LRS results
+    std::cout << "=== Suffix‐Tree + LRS ===\n";
+    std::cout << "n=" << n << " MB   time_build=" << time_st << " s\n";
+    std::cout << "max_lrs_len=" << len_st << "   pos=" << pos_st << "\n";
 
     return 0;
 }
