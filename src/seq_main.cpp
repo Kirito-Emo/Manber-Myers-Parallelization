@@ -6,7 +6,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
-#include "sequential_suffix_array.h"
+#include "seq_suffix.h"
 
 int main(int argc, char *argv[])
 {

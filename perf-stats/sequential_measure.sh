@@ -20,24 +20,36 @@ echo "file,run,build_time_s" > seq_stats.csv
 # Run hpc and append timings
 for f in "${FILES[@]}"; do
   for ((i=1; i<=RUNS; i++)); do
-    t=$(${HPC_BINARY} "$f" \
-        | grep time_build \
-        | awk '{print $2}')
+    t=$("${HPC_BINARY}" "$f" \
+        | grep -m1 -o 'time_build=[0-9]\+\(\.[0-9]\+\)\?' \
+        | cut -d= -f2)
     echo "$(basename "$f"),$i,$t" >> seq_stats.csv
   done
 done
 
-# Header for the averages CSV file
-echo "file,avg_build_time_s" > seq_summary.csv
+# Compute averages grouping by file, directly from seq_stats.csv
+awk -F, '
+  NR==1 { next }                # Skip header
+  { sum[$1] += $3; cnt[$1]++ }  # Sums and counts
+  END {
+    # Print header
+    print "file,avg_build_time_s"
+    # For each file emit file,average
+    for (f in sum) {
+      printf "%s,%.6f\n", f, sum[f]/cnt[f]
+    }
+  }
+' seq_stats.csv > seq_summary.csv
 
-# Compute average per file
-for f in "${FILES[@]}"; do
-  base=$(basename "$f")
-  avg=$(awk -F, -v file="$base" \
-        '$1==file{sum+=$3;count++} \
-         END { printf "%.6f", sum/count }' \
-        seq_stats.csv)
-  echo "$base,$avg" >> seq_summary.csv
-done
+# Sort the summary file by file name and keep the header
+{
+  head -n1 seq_summary.csv
+  grep '^string_1MB.txt,'   seq_summary.csv
+  grep '^string_5MB.txt,'   seq_summary.csv
+  grep '^string_10MB.txt,'  seq_summary.csv
+  grep '^string_50MB.txt,'  seq_summary.csv
+  grep '^string_100MB.txt,' seq_summary.csv
+  grep '^string_500MB.txt,' seq_summary.csv
+} > tmp && mv tmp seq_summary.csv
 
 echo "Done. Raw data in seq_stats.csv, averages in seq_summary.csv"

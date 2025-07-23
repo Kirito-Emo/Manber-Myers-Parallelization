@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(MyHPCProject LANGUAGES CXX)
+project(Manber-Myers-Parallelization LANGUAGES CXX)
 
 # C++17, optimization -O2 and warning
 set(CMAKE_CXX_STANDARD 17)

@@ -1,0 +1,7 @@
+file,avg_build_time_s
+string_1MB.txt,0.109794
+string_5MB.txt,1.169194
+string_10MB.txt,2.826906
+string_50MB.txt,17.870460
+string_100MB.txt,37.823680
+string_500MB.txt,221.067200
