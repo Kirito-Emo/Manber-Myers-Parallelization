@@ -31,7 +31,7 @@ make
 
 ## Usage
 
-## Generating Random Strings
+### Generating Random Strings
 Use the script in the `random_strings/` directory to generate random strings for testing:
 ```sh
 cd random_strings

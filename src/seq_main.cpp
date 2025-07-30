@@ -26,8 +26,6 @@ int main(int argc, char *argv[])
     for (int i = 0; i < n; ++i)
         text[i] = static_cast<unsigned char>(input[i]);
 
-    // --- SUFFIX ARRAY ---
-
     // Allocate workspace
     std::vector<int> sa(n), rank(n), cnt(n), next(n), lcp(n);
     std::vector<bool> bh(n), b2h(n);
@@ -57,19 +55,6 @@ int main(int argc, char *argv[])
     std::cout << "=== Suffix‐Array + LCP ===\n";
     std::cout << "n=" << n << " MB   time_build=" << time_sa << " s\n";
     std::cout << "max_lrs_len=" << max_lcp << "   pos=" << pos_sa << "\n\n";
-
-    // --- SUFFIX TREE ---
-    auto t2 = std::chrono::steady_clock::now();
-    SuffixTree st(text); // Build the suffix tree
-    auto [len_st, pos_st] = st.LRS(); // Find the longest repeated substring
-    auto t3 = std::chrono::steady_clock::now();
-
-    double time_st = std::chrono::duration<double>(t3 - t2).count();
-
-    // Report Suffix-Tree + LRS results
-    std::cout << "=== Suffix‐Tree + LRS ===\n";
-    std::cout << "n=" << n << " MB   time_build=" << time_st << " s\n";
-    std::cout << "max_lrs_len=" << len_st << "   pos=" << pos_st << "\n";
 
     return 0;
 }
