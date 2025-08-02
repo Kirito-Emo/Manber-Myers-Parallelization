@@ -1,10 +1,10 @@
 // Created by [Emanuele](https://github.com/Kirito-Emo)
 
+#include "seq_suffix_array.h"
 #include <algorithm>
-#include "seq_suffix.h"
 
 // Manber & Myers: O(n log n) suffix-array construction
-void build_suffix_array(const std::vector<int> &text, std::vector<int> &sa, std::vector<int> &rank,
+void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, std::vector<int> &rank,
                         std::vector<int> &cnt, std::vector<int> &next, std::vector<bool> &bh, std::vector<bool> &b2h)
 {
     int n = text.size();
@@ -89,7 +89,7 @@ void build_suffix_array(const std::vector<int> &text, std::vector<int> &sa, std:
 }
 
 // Kasai et al.: O(n) LCP construction
-void build_lcp(const std::vector<int> &text, const std::vector<int> &sa, std::vector<int> &rank, std::vector<int> &lcp)
+void build_lcp(const std::vector<uint8_t> &text, const std::vector<int> &sa, std::vector<int> &rank, std::vector<int> &lcp)
 {
     int n = text.size();
 
@@ -98,6 +98,7 @@ void build_lcp(const std::vector<int> &text, const std::vector<int> &sa, std::ve
         rank[sa[i]] = i;
 
     lcp[0] = 0;
+
     // Build LCP array
     for (int i = 0, h = 0; i < n; ++i)
     {
