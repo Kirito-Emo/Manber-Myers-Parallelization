@@ -1,7 +1,7 @@
 // Created by [Emanuele](https://github.com/Kirito-Emo)
 
-#ifndef SEQUENTIAL_SUFFIX_ARRAY_H
-#define SEQUENTIAL_SUFFIX_ARRAY_H
+#ifndef SUFFIX_ARRAY_H
+#define SUFFIX_ARRAY_H
 
 #include <cstdint>
 #include <vector>
@@ -28,6 +28,7 @@ void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, 
  * @param rank  Workspace / inverse of sa
  * @param lcp   Output: lcp[i] = length of LCP(sa[i], sa[i-1])
  */
-void build_lcp(const std::vector<uint8_t> &text, const std::vector<int> &sa, std::vector<int> &rank, std::vector<int> &lcp);
+void build_lcp(const std::vector<uint8_t> &text, const std::vector<int> &sa, std::vector<int> &rank,
+               std::vector<int> &lcp);
 
-#endif // SEQUENTIAL_SUFFIX_ARRAY_H
+#endif // SUFFIX_ARRAY_H

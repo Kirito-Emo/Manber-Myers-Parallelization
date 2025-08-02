@@ -1,7 +1,7 @@
 // Created by [Emanuele](https://github.com/Kirito-Emo)
 
-#include "seq_suffix_array.h"
 #include <algorithm>
+#include "suffix_array.h"
 
 // Manber & Myers: O(n log n) suffix-array construction
 void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, std::vector<int> &rank,

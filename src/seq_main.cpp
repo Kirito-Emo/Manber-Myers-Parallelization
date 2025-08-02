@@ -5,7 +5,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
-#include "seq_suffix_array.h"
+#include "suffix_array.h"
 
 int main(int argc, char *argv[])
 {

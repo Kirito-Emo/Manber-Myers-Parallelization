@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Created by Emanuele (https://github.com/Kirito-Emo)
+
 # CONFIGURATION
 BIN=../cmake-build-debug/hpc        # path to binary
 RUNS=10                             # how many repeats per size
