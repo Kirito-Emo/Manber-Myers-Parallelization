@@ -32,14 +32,8 @@ int main(int argc, char *argv[])
 
         // Parse numeric argument safely
         auto [ptr, ec] = std::from_chars(argv[1], argv[1] + std::strlen(argv[1]), mb);
-        if (ec != std::errc{} || *ptr != '\0')
-        {
-            std::cerr << "Error: argument must be an integer\n";
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
-
-        // Validate allowed sizes
-        if (!(mb == 1 || mb == 5 || mb == 10 || mb == 50 || mb == 100 || mb == 500))
+        if (ec != std::errc{} || *ptr != '\0' ||
+            !(mb == 1 || mb == 5 || mb == 10 || mb == 50 || mb == 100 || mb == 500))
         {
             std::cerr << "Error: size must be one of 1, 5, 10, 50, 100, or 500 MB.\n";
             MPI_Abort(MPI_COMM_WORLD, 1);
@@ -51,23 +45,38 @@ int main(int argc, char *argv[])
 
     // Compute total bytes
     size_t n = static_cast<size_t>(mb) * 1024 * 1024;
+    std::vector<uint8_t> chunk;
+    int chunk_size = (n + size - 1) / size;
 
-    // Generate pseudo-random text with fixed seed
-    std::vector<uint8_t> text(n);
-    std::mt19937_64 gen(123456789ULL); // Fixed seed for reproducibility
-    std::uniform_int_distribution<int> dist(0, 255);
-
-    for (size_t i = 0; i < n; ++i)
+    if (rank == 0)
     {
-        text[i] = static_cast<uint8_t>(dist(gen));
+        // Generate pseudo-random text with fixed seed
+        std::vector<uint8_t> full_text(n);
+        std::mt19937_64 gen(123456789ULL); // Fixed seed for reproducibility
+        std::uniform_int_distribution<int> dist(0, 255);
+
+        for (size_t i = 0; i < n; ++i)
+            full_text[i] = static_cast<uint8_t>(dist(gen));
+
+        for (int r = 1; r < size; ++r)
+        {
+            int start = r * chunk_size;
+            int end = std::min(static_cast<int>(n), start + chunk_size);
+            int len = end - start;
+            MPI_Send(&full_text[start], len, MPI_UINT8_T, r, 0, MPI_COMM_WORLD);
+        }
+
+        int end = std::min(static_cast<int>(n), chunk_size);
+        chunk.assign(full_text.begin(), full_text.begin() + end);
     }
-
-    // Decompose suffix indices among ranks
-    std::vector<int> starts;
-
-    for (size_t i = rank; i < n; i += size)
+    else
     {
-        starts.push_back(i);
+        chunk.resize(chunk_size);
+        MPI_Status status;
+        MPI_Recv(chunk.data(), chunk_size, MPI_UINT8_T, 0, 0, MPI_COMM_WORLD, &status);
+        int real_size;
+        MPI_Get_count(&status, MPI_UINT8_T, &real_size);
+        chunk.resize(real_size);
     }
 
     // Build local suffix array subset
@@ -75,7 +84,7 @@ int main(int argc, char *argv[])
 
     auto t0 = std::chrono::steady_clock::now();
 
-    build_suffix_array_subset(text, starts, sa_local);
+    build_suffix_array_subset(chunk, sa_local);
 
     auto t1 = std::chrono::steady_clock::now();
     double time_build = std::chrono::duration<double>(t1 - t0).count();
@@ -92,7 +101,7 @@ int main(int argc, char *argv[])
         displs[0] = 0;
         for (int r = 1; r < size; ++r)
             displs[r] = displs[r - 1] + counts[r - 1];
-        all_sa.resize(n);
+        all_sa.resize(displs[size - 1] + counts[size - 1]);
     }
 
     MPI_Gatherv(sa_local.data(), local_n, MPI_INT, all_sa.data(), counts.data(), displs.data(), MPI_INT, 0,
@@ -101,11 +110,17 @@ int main(int argc, char *argv[])
     // Rank 0 merges and builds LCP + finds LRS
     if (rank == 0)
     {
+        std::vector<uint8_t> full_text(n);
+        std::mt19937_64 gen(123456789ULL);
+        std::uniform_int_distribution<int> dist(0, 255);
+        for (size_t i = 0; i < n; ++i)
+            full_text[i] = static_cast<uint8_t>(dist(gen));
+
         std::vector<int> sa_global;
-        merge_k_sorted_lists(text, all_sa, counts, sa_global);
+        merge_k_sorted_lists(full_text, all_sa, counts, sa_global);
 
         std::vector<int> rk(n), lcp(n);
-        build_lcp(text, sa_global, rk, lcp);
+        build_lcp(full_text, sa_global, rk, lcp);
 
         int max_lcp = 0, pos = 0;
 
@@ -123,14 +138,13 @@ int main(int argc, char *argv[])
         MPI_Gather(&time_build, 1, MPI_DOUBLE, times.data(), 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
         // Print results
-        std::cout << "\n=== MPI Suffix-Array + LCP across " << size << " ranks ===\n";
+        std::cout << "\n=== MPI Suffix-Array (Chunks) + LCP across " << size << " ranks ===\n";
 
         for (int r = 0; r < size; ++r)
         {
             std::cout << "rank=" << r << " time_build=" << times[r] << " s\n";
+            std::cout << "max_lrs_len=" << max_lcp << " pos=" << pos << "\n";
         }
-
-        std::cout << "global max_lrs_len=" << max_lcp << " pos=" << pos << "\n";
     }
     else
     {

@@ -8,6 +8,10 @@ BIN=../cmake-build-debug-mpi/hpc_mpi
 SIZES=(1 5 10 50 100 500)
 NP=8 # Number of processes (change as needed)
 
+# Create output directory if it doesn't exist
+OUTPUT_DIR="mpi_measurements"
+mkdir -p "$OUTPUT_DIR"
+
 # RUNNING
 echo "mode,size_mb,run,rank,time_s" > mpi_stats_8.csv
 
@@ -29,3 +33,10 @@ done
 # Generate summary (avg time per mode and size)
 echo "mode,size_mb,rank,avg_time_s" > mpi_summary_8.csv
 awk -F, 'NR>1 { key=$1","$2","$4; sum[key]+=$5; cnt[key]++ } END { for (k in sum) printf "%s,%.6f\n", k, sum[k]/cnt[k] }' mpi_stats_8.csv >> mpi_summary_8.csv
+
+# Sort the summary by size and then rank
+sort -t, -k2n -k3n -o mpi_summary_8.csv mpi_summary_8.csv
+
+# Move the generated files to the output directory
+mv mpi_stats_8.csv "$OUTPUT_DIR/"
+mv mpi_summary_8.csv "$OUTPUT_DIR/"

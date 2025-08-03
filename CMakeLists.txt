@@ -25,7 +25,7 @@ add_executable(hpc ${PROJECT_SOURCE_DIR}/src/seq_main.cpp ${SA_ARCS})
 add_executable(hpc_mpi ${PROJECT_SOURCE_DIR}/src/mpi_main.cpp ${SA_ARCS}
         include/suffix_array_mpi.h
         src/suffix_array_mpi.cpp
-        src/openmp_mpi_main.cpp)
+)
 
 # Link MPI libraries
 target_link_libraries(hpc_mpi MPI::MPI_CXX)

@@ -11,6 +11,10 @@ set -euo pipefail
 BIN="../cmake-build-debug-mpi/hpc_mpi"
 MB=10 # Size in MB to pass to the MPI program (change as needed)
 
+# Create output directory if it doesn't exist
+OUTPUT_DIR="mpi_chunks"
+mkdir -p "$OUTPUT_DIR"
+
 # Check if the executable exists
 if [ ! -f "../cmake-build-debug-mpi/hpc_mpi" ]; then
     echo "Executable not found. Please build the project first."
@@ -48,6 +52,9 @@ monitor_and_run(){
 
   echo "---- Done run for np=$np, logs in $cpu_log and $ps_log ----"
   echo
+
+  mv "$cpu_log" "$OUTPUT_DIR/"
+  mv "$ps_log" "$OUTPUT_DIR/"
 }
 
 # Run for 2, 4 and 8 ranks

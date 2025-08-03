@@ -1,4 +1,10 @@
 .idea
-./mpi/*.log
-./massif_int.out
-./massif_uint8_t.out
+/perf-stats/seq_measurements/massif_int.out
+/perf-stats/seq_measurements/massif_uint8_t.out
+/mpi/mpi_redundancy
+/mpi/mpi_chunks
+/perf-stats/mpi_measurements/massif-mpi-8c-100MB.out
+/perf-stats/mpi_measurements/massif-mpi-4c-100MB.out
+/perf-stats/seq_measurements/seq_int_10MB_mem_profile.txt
+/perf-stats/seq_measurements/seq_uint8t_10MB_mem_profile.txt
+/perf-stats/seq_measurements/massif_seq_100MB.out
