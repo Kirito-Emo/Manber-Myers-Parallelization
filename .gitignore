@@ -1,1 +1,4 @@
 .idea
+./mpi/*.log
+./massif_int.out
+./massif_uint8_t.out

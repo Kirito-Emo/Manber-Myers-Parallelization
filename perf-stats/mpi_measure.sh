@@ -6,10 +6,10 @@ set -euo pipefail
 # CONFIGURATION
 BIN=../cmake-build-debug-mpi/hpc_mpi
 SIZES=(1 5 10 50 100 500)
-NP=4 # Number of processes (change as needed)
+NP=8 # Number of processes (change as needed)
 
 # RUNNING
-echo "mode,size_mb,run,rank,time_s" > mpi_stats_4.csv
+echo "mode,size_mb,run,rank,time_s" > mpi_stats_8.csv
 
 for mb in "${SIZES[@]}"; do
   for run in $(seq 1 10); do
@@ -22,10 +22,10 @@ for mb in "${SIZES[@]}"; do
           }
           print mode "," mb "," run "," rank "," time
         }' \
-      >> mpi_stats_4.csv
+      >> mpi_stats_8.csv
   done
 done
 
 # Generate summary (avg time per mode and size)
-echo "mode,size_mb,rank,avg_time_s" > mpi_summary_4.csv
-awk -F, 'NR>1 { key=$1","$2","$4; sum[key]+=$5; cnt[key]++ } END { for (k in sum) printf "%s,%.6f\n", k, sum[k]/cnt[k] }' mpi_stats_4.csv >> mpi_summary_4.csv
+echo "mode,size_mb,rank,avg_time_s" > mpi_summary_8.csv
+awk -F, 'NR>1 { key=$1","$2","$4; sum[key]+=$5; cnt[key]++ } END { for (k in sum) printf "%s,%.6f\n", k, sum[k]/cnt[k] }' mpi_stats_8.csv >> mpi_summary_8.csv

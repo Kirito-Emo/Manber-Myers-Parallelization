@@ -9,7 +9,7 @@ set -euo pipefail
 
 # CONFIGURATION
 BIN="../cmake-build-debug-mpi/hpc_mpi"
-MB=10
+MB=10 # Size in MB to pass to the MPI program (change as needed)
 
 # Check if the executable exists
 if [ ! -f "../cmake-build-debug-mpi/hpc_mpi" ]; then
