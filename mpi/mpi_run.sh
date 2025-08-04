@@ -9,16 +9,25 @@ set -euo pipefail
 
 # CONFIGURATION
 BIN="../cmake-build-debug-mpi/hpc_mpi"
-MB=10 # Size in MB to pass to the MPI program (change as needed)
+MB=100 # Size in MB to pass to the MPI program (change as needed)
+INPUT_FILE="../random_strings/string_${MB}MB.bin"
 
 # Create output directory if it doesn't exist
 OUTPUT_DIR="mpi_chunks"
-mkdir -p "$OUTPUT_DIR"
+if [ ! -d "$OUTPUT_DIR" ]; then
+  mkdir -p "$OUTPUT_DIR"
+fi
 
 # Check if the executable exists
 if [ ! -f "../cmake-build-debug-mpi/hpc_mpi" ]; then
     echo "Executable not found. Please build the project first."
     exit 1
+fi
+
+# Check if the input file exists
+if [ ! -f "$INPUT_FILE" ]; then
+  echo "Input file $INPUT_FILE not found. Please generate it first."
+  exit 1
 fi
 
 monitor_and_run(){

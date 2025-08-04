@@ -6,7 +6,18 @@ set -euo pipefail
 # CONFIGURATION
 BIN=../cmake-build-debug/hpc        # path to binary
 RUNS=10                             # how many repeats per size
-SIZES=(1 5 10 50 100 500)           # sizes in MB
+SIZES=(1 50 100 200 500)            # sizes in MB
+OUTPUT_DIR=seq_measurements         # output directory
+
+# Check if the current dir is perf-stats otherwise cd into it
+if [[ $PWD != *"perf-stats"* ]]; then
+  cd perf-stats || exit 1
+fi
+
+# Create output directory if it doesn't exist
+if [[ ! -d $PWD/$OUTPUT_DIR ]]; then
+  mkdir -p "$OUTPUT_DIR"
+fi
 
 # Stats CSV
 echo "size,run,build_time" > seq_stats.csv
@@ -44,3 +55,8 @@ awk -F, '
 echo "Sequential performance statistics:"
 echo "- Detailed runs in   seq_stats.csv"
 echo "- Average times in   seq_summary.csv"
+
+# Move output files to the output directory
+mv seq_stats.csv "$OUTPUT_DIR"/
+mv seq_summary.csv "$OUTPUT_DIR"/
+echo "Output files moved to $OUTPUT_DIR/"

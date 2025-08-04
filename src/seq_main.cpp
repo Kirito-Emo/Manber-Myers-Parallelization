@@ -1,9 +1,9 @@
-// Created by [Emanuele](https://github.com/Kirito-Emo)
+// Created by Emanuele (https://github.com/Kirito-Emo)
 
 #include <chrono>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
-#include <random>
 #include <vector>
 #include "suffix_array.h"
 
@@ -17,25 +17,33 @@ int main(int argc, char *argv[])
 
     // Parse the desired size in MB from command line
     const int mb = std::stoi(argv[1]);
-    if (mb != 1 && mb != 5 && mb != 10 && mb != 50 && mb != 100 && mb != 500)
+    if (mb != 1 && mb != 50 && mb != 100 && mb != 200 && mb != 500)
     {
-        std::cerr << "Error: size must be one of 1, 5, 10, 50, 100, or 500 MB.\n";
+        std::cerr << "Error: size must be one of 1, 50, 100, 200 or 500 MB.\n";
         return 1;
     }
 
-    // Compute total number of bytes = MB * 1024 * 1024
+    // Construct filename based on MB size
+    std::string filename = "../random_strings/string_" + std::to_string(mb) + "MB.bin";
     const size_t n = static_cast<size_t>(mb) * 1024 * 1024;
 
-    // Prepare text buffer in RAM (1 byte per character)
     std::vector<uint8_t> text(n);
+    std::ifstream fin(filename, std::ios::binary);
 
-    // Use of mt19937_64 (high-quality non-CS PRNG 64bit Mersenne Twister)
-    std::mt19937_64 gen(123456789ULL); // reproducible randomness due to fixed seed
-    std::uniform_int_distribution<int> dist(0, 255); // uniform [0..255]
+    if (!fin)
+    {
+        std::cerr << "Error: could not open file " << filename << "\n";
+        return 1;
+    }
 
-    // Fill with pseudorandom bytes
-    for (size_t i = 0; i < n; ++i)
-        text[i] = static_cast<uint8_t>(dist(gen));
+    fin.read(reinterpret_cast<char *>(text.data()), n);
+    if (static_cast<size_t>(fin.gcount()) != n)
+    {
+        std::cerr << "Error: file size mismatch. Expected " << n << " bytes.\n";
+        return 1;
+    }
+
+    fin.close();
 
     // Allocate workspace for SA + LCP
     std::vector<int> sa(n), rank(n), cnt(n), next(n), lcp(n);

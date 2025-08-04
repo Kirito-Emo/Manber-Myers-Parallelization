@@ -4,9 +4,9 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <mpi.h>
-#include <random>
 #include <vector>
 #include "suffix_array.h"
 #include "suffix_array_mpi.h"
@@ -32,10 +32,9 @@ int main(int argc, char *argv[])
 
         // Parse numeric argument safely
         auto [ptr, ec] = std::from_chars(argv[1], argv[1] + std::strlen(argv[1]), mb);
-        if (ec != std::errc{} || *ptr != '\0' ||
-            !(mb == 1 || mb == 5 || mb == 10 || mb == 50 || mb == 100 || mb == 500))
+        if (ec != std::errc{} || *ptr != '\0' || !(mb == 1 || mb == 50 || mb == 100 || mb == 200 || mb == 500))
         {
-            std::cerr << "Error: size must be one of 1, 5, 10, 50, 100, or 500 MB.\n";
+            std::cerr << "Error: size must be one of 1, 50, 100, 200 or 500 MB.\n";
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
     }
@@ -45,41 +44,18 @@ int main(int argc, char *argv[])
 
     // Compute total bytes
     size_t n = static_cast<size_t>(mb) * 1024 * 1024;
-    std::vector<uint8_t> chunk;
     int chunk_size = (n + size - 1) / size;
+    size_t start = rank * chunk_size;
+    size_t actual_chunk = std::min(chunk_size, static_cast<int>(n - start));
+    std::vector<uint8_t> chunk(actual_chunk);
 
-    if (rank == 0)
-    {
-        // Generate pseudo-random text with fixed seed
-        std::vector<uint8_t> full_text(n);
-        std::mt19937_64 gen(123456789ULL); // Fixed seed for reproducibility
-        std::uniform_int_distribution<int> dist(0, 255);
+    // Read the chunk of data from the fil
+    std::string filename = "../random_strings/string_" + std::to_string(mb) + "MB.bin";
+    MPI_File file;
+    MPI_File_open(MPI_COMM_WORLD, filename.c_str(), MPI_MODE_RDONLY, MPI_INFO_NULL, &file);
+    MPI_File_read_at(file, start, chunk.data(), actual_chunk, MPI_UINT8_T, MPI_STATUS_IGNORE);
+    MPI_File_close(&file);
 
-        for (size_t i = 0; i < n; ++i)
-            full_text[i] = static_cast<uint8_t>(dist(gen));
-
-        for (int r = 1; r < size; ++r)
-        {
-            int start = r * chunk_size;
-            int end = std::min(static_cast<int>(n), start + chunk_size);
-            int len = end - start;
-            MPI_Send(&full_text[start], len, MPI_UINT8_T, r, 0, MPI_COMM_WORLD);
-        }
-
-        int end = std::min(static_cast<int>(n), chunk_size);
-        chunk.assign(full_text.begin(), full_text.begin() + end);
-    }
-    else
-    {
-        chunk.resize(chunk_size);
-        MPI_Status status;
-        MPI_Recv(chunk.data(), chunk_size, MPI_UINT8_T, 0, 0, MPI_COMM_WORLD, &status);
-        int real_size;
-        MPI_Get_count(&status, MPI_UINT8_T, &real_size);
-        chunk.resize(real_size);
-    }
-
-    // Build local suffix array subset
     std::vector<int> sa_local;
 
     auto t0 = std::chrono::steady_clock::now();
@@ -110,11 +86,10 @@ int main(int argc, char *argv[])
     // Rank 0 merges and builds LCP + finds LRS
     if (rank == 0)
     {
+        std::ifstream fin(filename, std::ios::binary);
         std::vector<uint8_t> full_text(n);
-        std::mt19937_64 gen(123456789ULL);
-        std::uniform_int_distribution<int> dist(0, 255);
-        for (size_t i = 0; i < n; ++i)
-            full_text[i] = static_cast<uint8_t>(dist(gen));
+        fin.read(reinterpret_cast<char *>(full_text.data()), n);
+        fin.close();
 
         std::vector<int> sa_global;
         merge_k_sorted_lists(full_text, all_sa, counts, sa_global);
@@ -141,10 +116,8 @@ int main(int argc, char *argv[])
         std::cout << "\n=== MPI Suffix-Array (Chunks) + LCP across " << size << " ranks ===\n";
 
         for (int r = 0; r < size; ++r)
-        {
             std::cout << "rank=" << r << " time_build=" << times[r] << " s\n";
-            std::cout << "max_lrs_len=" << max_lcp << " pos=" << pos << "\n";
-        }
+        std::cout << "max_lrs_len=" << max_lcp << " pos=" << pos << "\n";
     }
     else
     {

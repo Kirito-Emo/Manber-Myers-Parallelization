@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <queue>
 
+// Builds a suffix array using the doubling algorithm on a chunk of text
 void build_suffix_array_subset(const std::vector<uint8_t> &chunk, std::vector<int> &sa_out)
 {
     int n = chunk.size();
@@ -53,6 +54,7 @@ void build_suffix_array_subset(const std::vector<uint8_t> &chunk, std::vector<in
         sa_out[i] = bucket[i].second;
 }
 
+// Merges suffix arrays of all chunks into a global suffix array
 void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<int> &all_sa,
                           const std::vector<int> &counts, std::vector<int> &sa_out)
 {
@@ -64,8 +66,8 @@ void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<in
 
     struct Item
     {
-        int idx; // suffix starting position
-        int which; // which sub-list it came from
+        size_t idx; // Global index of suffix in text
+        int which; // From which chunk it came
     };
 
     // Min-heap comparing suffixes lexicographically
