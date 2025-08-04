@@ -4,3 +4,4 @@
 /perf-stats/seq_measurements/massif_seq_100MB.out
 /perf-stats/mpi_measurements/massif_mpi_8c_100MB.out
 /perf-stats/mpi_measurements/massif_mpi_4c_100MB.out
+/perf-stats/omp_measurements/threads_8/massif_omp_8.out

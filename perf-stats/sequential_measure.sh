@@ -14,6 +14,12 @@ if [[ $PWD != *"perf-stats"* ]]; then
   cd perf-stats || exit 1
 fi
 
+# Check if binary exists
+if [[ ! -f "$BIN" ]]; then
+  echo "Error: Binary not found at $BIN. Please build the project first."
+  exit 2
+fi
+
 # Create output directory if it doesn't exist
 if [[ ! -d $PWD/$OUTPUT_DIR ]]; then
   mkdir -p "$OUTPUT_DIR"

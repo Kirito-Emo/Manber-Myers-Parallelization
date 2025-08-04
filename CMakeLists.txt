@@ -11,18 +11,30 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/include
 )
 
-# Common source files location
+# ===== Sequential build (no OpenMP) =====
 set(SA_ARCS "${PROJECT_SOURCE_DIR}/src/suffix_array.cpp")
+add_executable(hpc ${PROJECT_SOURCE_DIR}/src/seq_main.cpp ${SA_ARCS}) # C++ sequential source file location
 
-# C++ sequential source file location
-add_executable(hpc ${PROJECT_SOURCE_DIR}/src/seq_main.cpp ${SA_ARCS})
+# ===== Sequential build with OpenMP =====
+find_package(OpenMP REQUIRED)
+set(SA_ARCS_OMP "${PROJECT_SOURCE_DIR}/src/suffix_array_openmp.cpp")
+add_executable(hpc_omp ${PROJECT_SOURCE_DIR}/src/seq_main.cpp ${SA_ARCS_OMP}) # C++ sequential source file location with OpenMP
+target_link_libraries(hpc_omp OpenMP::OpenMP_CXX)
 
-# C++ parallel MPI source file location
+# ===== Parallel MPI build =====
 find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
 add_executable(hpc_mpi
         ${PROJECT_SOURCE_DIR}/src/mpi_main.cpp
         ${PROJECT_SOURCE_DIR}/src/suffix_array_mpi.cpp
         ${SA_ARCS}
-)
+) # C++ parallel source file location with MPI
 target_link_libraries(hpc_mpi MPI::MPI_CXX)
+
+# ===== Parallel MPI + OpenMP build =====
+add_executable(hpc_mpi_omp
+        ${PROJECT_SOURCE_DIR}/src/mpi_main.cpp
+        ${PROJECT_SOURCE_DIR}/src/suffix_array_mpi.cpp
+        ${SA_ARCS}
+) # C++ parallel source file location with MPI and OpenMP
+target_link_libraries(hpc_mpi_omp MPI::MPI_CXX OpenMP::OpenMP_CXX)
