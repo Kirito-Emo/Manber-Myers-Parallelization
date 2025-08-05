@@ -1,0 +1,5 @@
+mode,size_mb,avg_time_s
+cuda,1,0.202791
+cuda,50,6.766922
+cuda,100,16.106530
+cuda,200,32.294710

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "cuda_utils.h"
+#include "cuda_malloc_utils.h"
 #include "suffix_array_cuda.h"
 
 int main(int argc, char *argv[])
@@ -41,27 +42,32 @@ int main(int argc, char *argv[])
     fin.close();
 
     // Allocate output buffers
-    std::vector<int> sa; // Output suffix array
-    int max_lcp = 0, pos = 0;
+    std::vector<int> sa(n);
+    int lrs_len = 0, lrs_pos = 0;
 
-    // Allocate device buffers and run full CUDA pipeline
+    // Initialize CUDA memory pool
+    cudaMemPool_t pool;
+    cuda_mem_pool_init(&pool);
+
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    build_suffix_array_cuda(text, sa);
-    find_lrs_cuda(text, sa, pos, max_lcp);
+    // Full pipeline on GPU: SA + LRS
+    build_suffix_array_cuda(text, sa, pool);
+    find_lrs_cuda(text, sa, lrs_pos, lrs_len, pool);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     double time_sec = std::chrono::duration<double>(t1 - t0).count();
 
     std::cout << "=== CUDA Suffix Array + LCP ===\n";
     std::cout << "size=" << mb << " MB   time_build=" << time_sec << " s\n";
-    std::cout << "max_lrs_len=" << max_lcp << "   pos=" << pos << "\n";
+    std::cout << "max_lrs_len=" << lrs_len << "   pos=" << lrs_pos << "\n";
 
     // GPU info
     printCudaInfo();
 
-    // Free global buffers
+    // Cleanup
     cuda_suffix_array_cleanup();
+    cuda_mem_pool_destroy(pool);
 
     return 0;
 }

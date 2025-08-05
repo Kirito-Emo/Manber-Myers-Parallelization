@@ -5,7 +5,7 @@ set -euo pipefail
 
 # CONFIGURATION
 BIN=../cmake-build-debug-cuda/hpc_cuda
-SIZES=(1 50 100 200 500)
+SIZES=(1 50 100 200)
 RUNS=10
 OUTPUT_DIR="cuda_measurements"
 

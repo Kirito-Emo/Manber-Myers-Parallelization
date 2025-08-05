@@ -3,93 +3,111 @@
 #include "suffix_array_cuda.h"
 #include "cuda_kernels.cuh"
 #include "cuda_utils.h"
+#include "cuda_malloc_utils.h"
 #include <cuda_runtime.h>
-#include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
-#include <thrust/sequence.h>
-#include <thrust/copy.h>
-#include <thrust/sort.h>
 #include <thrust/extrema.h>
+#include <thrust/device_ptr.h>
+#include <thrust/sequence.h>
+#include <thrust/sort.h>
 #include <iostream>
 
-// Build the suffix array using Manber-Myers on GPU
-void build_suffix_array_cuda(const std::vector<uint8_t>& h_text, std::vector<int>& h_sa)
+// Build the suffix array using Manber–Myers algorithm on GPU
+void build_suffix_array_cuda(const std::vector<uint8_t>& h_text, std::vector<int>& h_sa, cudaMemPool_t pool)
 {
     int n = h_text.size();
     h_sa.resize(n);
 
-    // Device buffers
-    thrust::device_vector<uint8_t> d_text = h_text;
-    thrust::device_vector<int> d_sa(n), d_rank(n), d_new_rank(n), d_keys(n);
+    cudaStream_t stream = 0;  // Default stream
 
-    // Initialize sa = [0, 1, 2, ..., n-1]
-    thrust::sequence(d_sa.begin(), d_sa.end());
+    // Allocate device memory from async pool
+    uint8_t* d_text      = static_cast<uint8_t*>(cuda_malloc_async(pool, n * sizeof(uint8_t), stream));
+    int* d_sa            = static_cast<int*>(cuda_malloc_async(pool, n * sizeof(int), stream));
+    int* d_rank          = static_cast<int*>(cuda_malloc_async(pool, n * sizeof(int), stream));
+    int* d_new_rank      = static_cast<int*>(cuda_malloc_async(pool, n * sizeof(int), stream));
+    int* d_keys          = static_cast<int*>(cuda_malloc_async(pool, n * sizeof(int), stream));
 
-    // Initial ranks: rank[i] = text[i]
-    init_ranks_from_text(thrust::raw_pointer_cast(d_text.data()), thrust::raw_pointer_cast(d_rank.data()), n);
+    // Copy input text to device
+    CUDA_CHECK(cudaMemcpyAsync(d_text, h_text.data(), n * sizeof(uint8_t), cudaMemcpyHostToDevice, stream));
 
+    // Initialize suffix array and character ranks
+    thrust::device_ptr<int> dev_sa(d_sa);
+    thrust::sequence(dev_sa, dev_sa + n); // sa[i] = i
+
+    init_ranks_from_text(d_text, d_rank, n);
+
+    // Manber–Myers main loop
     int k = 1;
     while (k < n)
     {
-        // Compute packed (rank[i], rank[i + k]) into keys[i]
-        compute_rank_pairs(thrust::raw_pointer_cast(d_rank.data()), thrust::raw_pointer_cast(d_keys.data()), n, k);
+        compute_rank_pairs(d_rank, d_keys, n, k);
 
-        // Sort SA by key pairs
-        thrust::sort_by_key(d_keys.begin(), d_keys.end(), d_sa.begin());
+        // Sort suffixes based on key pairs
+        thrust::sort_by_key(thrust::device_pointer_cast(d_keys),
+                            thrust::device_pointer_cast(d_keys + n),
+                            thrust::device_pointer_cast(d_sa));
 
-        // Generate new ranks from sorted key pairs
-        update_ranks(thrust::raw_pointer_cast(d_sa.data()),
-                     thrust::raw_pointer_cast(d_rank.data()),
-                     thrust::raw_pointer_cast(d_new_rank.data()), n);
+        // Assign new ranks
+        update_ranks(d_sa, d_rank, d_new_rank, n);
+        std::swap(d_rank, d_new_rank);
 
-        // Swap ranks
-        d_rank.swap(d_new_rank);
-
-        // Early stop if ranks are unique
-        int last_rank;
-        CUDA_CHECK(cudaMemcpy(&last_rank, thrust::raw_pointer_cast(d_rank.data() + n - 1), sizeof(int), cudaMemcpyDeviceToHost));
+        // Check for convergence (all ranks unique)
+        int last_rank = -1;
+        CUDA_CHECK(cudaMemcpy(&last_rank, d_rank + (n - 1), sizeof(int), cudaMemcpyDeviceToHost));
         if (last_rank == n - 1)
             break;
 
         k <<= 1;
     }
 
-    // Copy final suffix array to host
-    thrust::copy(d_sa.begin(), d_sa.end(), h_sa.begin());
+    // Copy suffix array back to host
+    CUDA_CHECK(cudaMemcpyAsync(h_sa.data(), d_sa, n * sizeof(int), cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+
+    // Free all GPU memory
+    cuda_free_async(d_text, stream);
+    cuda_free_async(d_sa, stream);
+    cuda_free_async(d_rank, stream);
+    cuda_free_async(d_new_rank, stream);
+    cuda_free_async(d_keys, stream);
 }
 
-// Find the longest repeated substring on GPU using LCP
-void find_lrs_cuda(const std::vector<uint8_t>& h_text, const std::vector<int>& h_sa, int& lrs_pos, int& lrs_len)
+// Compute LCP and extract longest repeated substring (LRS) entirely on GPU
+void find_lrs_cuda(const std::vector<uint8_t>& h_text, const std::vector<int>& h_sa,
+                   int& lrs_pos, int& lrs_len, cudaMemPool_t pool)
 {
     int n = h_text.size();
     lrs_pos = 0;
     lrs_len = 0;
 
-    thrust::device_vector<uint8_t> d_text = h_text;
-    thrust::device_vector<int> d_sa = h_sa;
-    thrust::device_vector<int> d_rank(n), d_lcp(n);
+    cudaStream_t stream = 0;
 
-    // Compute rank[i] = inverse of sa[i]
-    compute_rank_kernel<<<(n + 255) / 256, 256>>>(
-        thrust::raw_pointer_cast(d_sa.data()),
-        thrust::raw_pointer_cast(d_rank.data()), n
-    );
-    CUDA_CHECK(cudaDeviceSynchronize());
+    // Allocate memory
+    uint8_t* d_text = static_cast<uint8_t*>(cuda_malloc_async(pool, n * sizeof(uint8_t), stream));
+    int* d_sa       = static_cast<int*>(cuda_malloc_async(pool, n * sizeof(int), stream));
+    int* d_rank     = static_cast<int*>(cuda_malloc_async(pool, n * sizeof(int), stream));
+    int* d_lcp      = static_cast<int*>(cuda_malloc_async(pool, n * sizeof(int), stream));
 
-    // Compute LCP array
-    compute_lcp_kernel<<<(n + 255) / 256, 256>>>(
-        thrust::raw_pointer_cast(d_text.data()),
-        thrust::raw_pointer_cast(d_sa.data()),
-        thrust::raw_pointer_cast(d_rank.data()),
-        thrust::raw_pointer_cast(d_lcp.data()), n
-    );
-    CUDA_CHECK(cudaDeviceSynchronize());
+    // Transfer data to device
+    CUDA_CHECK(cudaMemcpyAsync(d_text, h_text.data(), n * sizeof(uint8_t), cudaMemcpyHostToDevice, stream));
+    CUDA_CHECK(cudaMemcpyAsync(d_sa, h_sa.data(), n * sizeof(int), cudaMemcpyHostToDevice, stream));
 
-    // Find maximum LCP
-    auto max_it = thrust::max_element(d_lcp.begin(), d_lcp.end());
-    lrs_len = *max_it;
-    int idx = max_it - d_lcp.begin();
-    lrs_pos = h_sa[idx]; // Corresponding position
+    // Compute rank and LCP
+    compute_rank_kernel<<<(n + 255) / 256, 256, 0, stream>>>(d_sa, d_rank, n);
+    compute_lcp_kernel<<<(n + 255) / 256, 256, 0, stream>>>(d_text, d_sa, d_rank, d_lcp, n);
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+
+    // Find the max LCP value and its index
+    thrust::device_ptr<int> d_lcp_ptr(d_lcp);
+    auto max_it = thrust::max_element(d_lcp_ptr, d_lcp_ptr + n);
+    CUDA_CHECK(cudaMemcpy(&lrs_len, max_it.get(), sizeof(int), cudaMemcpyDeviceToHost));
+    int idx = max_it - d_lcp_ptr;
+    lrs_pos = h_sa[idx];
+
+    // Cleanup
+    cuda_free_async(d_text, stream);
+    cuda_free_async(d_sa, stream);
+    cuda_free_async(d_rank, stream);
+    cuda_free_async(d_lcp, stream);
 }
 
 // Reset CUDA state

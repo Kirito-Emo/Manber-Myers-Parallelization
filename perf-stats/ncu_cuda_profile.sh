@@ -34,7 +34,6 @@ ncu --set full \
     --launch-skip 0 \
     --launch-count 1 \
     --csv \
-    --section ".*" \
     --export "$OUTPUT_DIR/${PROFILE_NAME}.ncu-rep" \
     "$BIN" "$MB" | tee "$OUTPUT_DIR/${PROFILE_NAME}.txt"
 
