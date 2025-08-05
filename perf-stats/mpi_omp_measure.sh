@@ -35,7 +35,7 @@ fi
 run_measurement() {
   local NP="$1"
   local NT="$2"
-  local STATS_FILE="mpiomp_stats_${NP}r_${NT}t.csv"
+  local STATS_FILE="mpi_omp_stats_${NP}r_${NT}t.csv"
   local SUMMARY_FILE="mpi_omp_summary_${NP}r_${NT}t.csv"
 
   echo "Running measurement: $NP MPI ranks × $NT OMP threads"
@@ -65,7 +65,7 @@ run_measurement() {
 
   # Generate summary
   echo "mode,size_mb,rank,avg_time_s" > "$SUMMARY_FILE"
-  awk -F, 'NR>1 { key=$1","$2","$3; sum[key]+=$5; cnt[key]++ }
+  awk -F, 'NR>1 { key=$1","$2","$4; sum[key]+=$5; cnt[key]++ }
            END { for (k in sum) printf "%s,%.6f\n", k, sum[k]/cnt[k] }' "$STATS_FILE" >> "$SUMMARY_FILE"
 
   # Sort and move

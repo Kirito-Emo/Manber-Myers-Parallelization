@@ -1,4 +1,5 @@
 .idea
+/cmake-build-debug*
 /mpi/mpi_chunks
 /random_strings/*.bin
 /perf-stats/seq_measurements/massif_seq_100MB.out
