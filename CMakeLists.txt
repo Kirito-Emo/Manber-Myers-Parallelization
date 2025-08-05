@@ -25,7 +25,7 @@ target_compile_definitions(hpc PRIVATE MODE_SEQ)
 
 # ===== Sequential build with OpenMP =====
 find_package(OpenMP REQUIRED)
-set(SA_ARCS_OMP "${PROJECT_SOURCE_DIR}/src/suffix_array_openmp.cpp")
+set(SA_ARCS_OMP "${PROJECT_SOURCE_DIR}/src/suffix_array_omp.cpp")
 add_executable(hpc_omp ${PROJECT_SOURCE_DIR}/src/seq_main.cpp ${SA_ARCS_OMP}) # C++ sequential source file location with OpenMP
 target_link_libraries(hpc_omp OpenMP::OpenMP_CXX)
 target_compile_definitions(hpc_omp PRIVATE MODE_SEQ_OMP)
@@ -64,6 +64,23 @@ add_executable(hpc_cuda
 target_include_directories(hpc_cuda PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_compile_definitions(hpc_cuda PRIVATE MODE_CUDA)
 set_target_properties(hpc_cuda PROPERTIES
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED YES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_ARCHITECTURES 86
+)
+
+# ===== Parallel Streams CUDA GPU build =====
+add_executable(hpc_cuda_parallel
+        ${PROJECT_SOURCE_DIR}/src/cuda_main_parallel.cu
+        ${PROJECT_SOURCE_DIR}/src/suffix_array_cuda_parallel.cu
+        ${PROJECT_SOURCE_DIR}/src/cuda_kernels_parallel.cu
+        ${PROJECT_SOURCE_DIR}/src/cuda_utils.cu
+        ${PROJECT_SOURCE_DIR}/src/cuda_malloc_utils.cu
+)
+target_include_directories(hpc_cuda_parallel PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_compile_definitions(hpc_cuda_parallel PRIVATE MODE_CUDA_PARALLEL)
+set_target_properties(hpc_cuda_parallel PROPERTIES
         CUDA_STANDARD 17
         CUDA_STANDARD_REQUIRED YES
         CUDA_SEPARABLE_COMPILATION ON

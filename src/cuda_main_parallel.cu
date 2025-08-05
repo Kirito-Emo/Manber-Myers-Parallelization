@@ -2,13 +2,14 @@
 
 #include <chrono>
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 #include "cuda_utils.h"
 #include "cuda_malloc_utils.h"
-#include "suffix_array_cuda.h"
+#include "suffix_array_cuda_parallel.h"
 #include <iomanip>
 
 int main(int argc, char *argv[])
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Parse size and validate
+    // Parse size and file
     int mb = std::stoi(argv[1]);
     if (mb != 1 && mb != 50 && mb != 100 && mb != 200 && mb != 500)
     {
@@ -30,7 +31,6 @@ int main(int argc, char *argv[])
     size_t n = static_cast<size_t>(mb) * 1024 * 1024;
     std::string path = "../random_strings/string_" + std::to_string(mb) + "MB.bin";
 
-    // Load file
     std::ifstream fin(path, std::ios::binary);
     if (!fin)
     {
@@ -42,25 +42,28 @@ int main(int argc, char *argv[])
     fin.read(reinterpret_cast<char *>(text.data()), n);
     fin.close();
 
-    // Allocate output buffers
     std::vector<int> sa(n);
     int lrs_len = 0, lrs_pos = 0;
 
-    // Initialize CUDA memory pool
+    // Init CUDA memory pool
     cudaMemPool_t pool;
     cuda_mem_pool_init(&pool);
 
+    // Compute dynamic number of streams
+    constexpr int MAX_STREAMS = 8;
+    constexpr int MIN_MB_PER_STREAM = 10;
+    int num_streams = std::min(MAX_STREAMS, std::max(1, mb / MIN_MB_PER_STREAM));
+
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    // Full pipeline on GPU: SA + LRS
-    build_suffix_array_cuda(text, sa, pool);
-    find_lrs_cuda(text, sa, lrs_pos, lrs_len, pool);
+    build_suffix_array_cuda_parallel(text, sa, num_streams, pool);
+    find_lrs_cuda_parallel(text, sa, lrs_pos, lrs_len, pool);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     double time_sec = std::chrono::duration<double>(t1 - t0).count();
 
-    std::cout << "=== CUDA Suffix Array + LCP ===\n";
-    std::cout << "size=" << mb << " MB   time_build=" << time_sec << " s\n";
+    std::cout << "=== CUDA PARALLEL SA + LCP ===\n";
+    std::cout << "size=" << mb << " MB  streams=" << num_streams << "   time_build=" << time_sec << " s\n";
     std::cout << "max_lrs_len=" << lrs_len << "   pos=" << lrs_pos << "\n";
     if (lrs_len > 0)
     {
@@ -73,10 +76,8 @@ int main(int argc, char *argv[])
     else
         std::cout << "LRS: (no repeated substring found)\n";
 
-    // GPU info
     printCudaInfo();
 
-    // Cleanup
     cuda_suffix_array_cleanup();
     cuda_mem_pool_destroy(pool);
 

@@ -42,9 +42,9 @@ void build_suffix_array_cuda(const std::vector<uint8_t>& h_text, std::vector<int
         compute_rank_pairs(d_rank, d_keys, n, k);
 
         // Sort suffixes based on key pairs
-        thrust::sort_by_key(thrust::device_pointer_cast(d_keys),
-                            thrust::device_pointer_cast(d_keys + n),
-                            thrust::device_pointer_cast(d_sa));
+        thrust::stable_sort_by_key(thrust::device_pointer_cast(d_keys),
+                                    thrust::device_pointer_cast(d_keys + n),
+                                    thrust::device_pointer_cast(d_sa));
 
         // Assign new ranks
         update_ranks(d_sa, d_rank, d_new_rank, n);

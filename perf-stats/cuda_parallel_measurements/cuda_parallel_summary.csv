@@ -1,0 +1,5 @@
+mode,size_mb,avg_time_s
+cuda_parallel,1,0.108807
+cuda_parallel,50,0.402840
+cuda_parallel,100,0.714459
+cuda_parallel,200,1.339568

@@ -75,6 +75,15 @@ int main(int argc, char *argv[])
     std::cout << "size=" << mb << " MB   "
               << "time_build=" << time_sa << " s\n";
     std::cout << "max_lrs_len=" << max_lcp << "   pos=" << pos_sa << "\n";
+    if (max_lcp > 0)
+    {
+        std::cout << "LRS (hex): ";
+        for (int i = 0; i < max_lcp; ++i)
+            std::cout << std::hex << std::uppercase << static_cast<int>(text[pos_sa + i]) << ' ';
+        std::cout << std::dec << "\n";
+    }
+    else
+        std::cout << "LRS: (no repeated substring found)\n";
 
     return 0;
 }
