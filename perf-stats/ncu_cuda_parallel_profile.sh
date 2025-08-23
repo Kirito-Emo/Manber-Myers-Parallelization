@@ -4,21 +4,22 @@ set -euo pipefail
 # Created by Emanuele (https://github.com/Kirito-Emo)
 
 # CONFIGURATION
-BIN=../cmake-build-debug-cuda-parallel/hpc_cuda_parallel    # Binary to profile
+BIN=../cmake-build-debug-cuda-parallel/hpc_cuda_ms          # Binary to profile
 MB=100                                                      # Input size in MB
+STREAMS=${2:-4}                                             # Number of streams (default: 4)
 INPUT="../random_strings/string_${MB}MB.bin"                # Input binary string
-OUTPUT_DIR="cuda_parallel_profiles"
-PROFILE_NAME="cuda_parallel_${MB}MB_profile"
+OUTPUT_DIR="cuda_ms_profiles"
+PROFILE_NAME="cuda_ms_${MB}MB_profile"
 
 # Sanity checks
 [[ -f "$BIN" ]]   || { echo "Binary not found: $BIN"; exit 1; }
-[[ -f "$INPUT" ]] || { echo "Input file missing: $INPUT"; exit 1; }
+[[ -f "$INPUT" ]] || { echo "Input file missing: $INPUT"; exit 2; }
 if [[ ! -d "$OUTPUT_DIR" ]]; then
     mkdir -p "$OUTPUT_DIR"
 fi
 
 # Run Nsight Compute
-echo "Profiling ${MB}MB (parallel SA) with Nsight Compute..."
+echo "Profiling ${MB}MB (MultiStream SA) with Nsight Compute..."
 /usr/local/cuda/bin/ncu \
     --set full \
     --target-processes all \

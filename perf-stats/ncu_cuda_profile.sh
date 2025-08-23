@@ -19,7 +19,7 @@ fi
 # Check if binary input file exists
 if [[ ! -f "$INPUT" ]]; then
   echo "Error: input file not found in $INPUT. Please generate the input file first."
-  exit 1
+  exit 2
 fi
 
 # Create output directory if it doesn't exist

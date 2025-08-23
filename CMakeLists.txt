@@ -54,14 +54,14 @@ target_compile_definitions(hpc_mpi_omp PRIVATE MODE_MPI_OMP)
 
 # ===== CUDA GPU build =====
 enable_language(CUDA)
-add_executable(hpc_cuda
-        ${PROJECT_SOURCE_DIR}/src/cuda_main.cu
+set(SA_ARCS_CUDA
         ${PROJECT_SOURCE_DIR}/src/suffix_array_cuda.cu
-        ${PROJECT_SOURCE_DIR}/src/cuda_kernels.cu
-        ${PROJECT_SOURCE_DIR}/src/cuda_utils.cu
-        ${PROJECT_SOURCE_DIR}/src/cuda_malloc_utils.cu
 )
-target_include_directories(hpc_cuda PRIVATE ${PROJECT_SOURCE_DIR}/include)
+add_executable(hpc_cuda
+        ${PROJECT_SOURCE_DIR}/src/cuda_main.cpp
+        ${SA_ARCS_CUDA}
+        ${PROJECT_SOURCE_DIR}/src/suffix_array.cpp
+)
 target_compile_definitions(hpc_cuda PRIVATE MODE_CUDA)
 set_target_properties(hpc_cuda PROPERTIES
         CUDA_STANDARD 17
@@ -70,17 +70,14 @@ set_target_properties(hpc_cuda PROPERTIES
         CUDA_ARCHITECTURES 86
 )
 
-# ===== Parallel Streams CUDA GPU build =====
-add_executable(hpc_cuda_parallel
-        ${PROJECT_SOURCE_DIR}/src/cuda_main_parallel.cu
-        ${PROJECT_SOURCE_DIR}/src/suffix_array_cuda_parallel.cu
-        ${PROJECT_SOURCE_DIR}/src/cuda_kernels_parallel.cu
-        ${PROJECT_SOURCE_DIR}/src/cuda_utils.cu
-        ${PROJECT_SOURCE_DIR}/src/cuda_malloc_utils.cu
+# ===== Multi-Stream CUDA GPU build =====
+add_executable(hpc_cuda_ms
+        ${PROJECT_SOURCE_DIR}/src/cuda_ms_main.cpp
+        ${PROJECT_SOURCE_DIR}/src/suffix_array_cuda_ms.cu
+        ${PROJECT_SOURCE_DIR}/src/suffix_array.cpp
 )
-target_include_directories(hpc_cuda_parallel PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_compile_definitions(hpc_cuda_parallel PRIVATE MODE_CUDA_PARALLEL)
-set_target_properties(hpc_cuda_parallel PROPERTIES
+target_compile_definitions(hpc_cuda_ms PRIVATE MODE_CUDA_MS)
+set_target_properties(hpc_cuda_ms PROPERTIES
         CUDA_STANDARD 17
         CUDA_STANDARD_REQUIRED YES
         CUDA_SEPARABLE_COMPILATION ON

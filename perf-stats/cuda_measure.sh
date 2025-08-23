@@ -5,7 +5,7 @@ set -euo pipefail
 
 # CONFIGURATION
 BIN=../cmake-build-debug-cuda/hpc_cuda
-SIZES=(1 50 100 200 500)
+SIZES=(1 50 100 200)
 RUNS=10
 OUTPUT_DIR="cuda_measurements"
 
@@ -36,32 +36,36 @@ for mb in "${SIZES[@]}"; do
 done
 
 # CSV output
-CSV_RAW="$OUTPUT_DIR/cuda_stats.csv"
-CSV_SUM="$OUTPUT_DIR/cuda_summary.csv"
-echo "mode,size_mb,run,time_s" > "$CSV_RAW"
+RAW="$OUTDIR_DIR/cuda_stats.csv"
+SUM="$OUTDIR_DIR/cuda_summary.csv"
+echo "mode,size_mb,run,sa_ms,lcp_ms,time_ms" > "$RAW"
 
 # Run benchmark
 for mb in "${SIZES[@]}"; do
-  INPUT="../random_strings/string_${mb}MB.bin"
-
-  if [[ ! -f "$INPUT" ]]; then
-    echo "Warning: skipping ${mb}MB → file not found: $INPUT"
-    continue
-  fi
-
+  echo "[CUDA] size=${mb}MB"
   for run in $(seq 1 $RUNS); do
-    echo "Running: $mb MB (run $run)"
-    time_build=$("$BIN" "$mb" | grep -oP 'time_build=\K[0-9.]+')
-    printf "cuda,%s,%s,%.6f\n" "$mb" "$run" "$time_build" >> "$CSV_RAW"
+    # Run and capture full output
+    out="$("$BIN" "$mb")" || { echo "Run failed on ${mb}MB"; exit 4; }
+
+    # Extract times (they are printed by your program)
+    sa_ms=$(echo "$out"  | grep -oP '\[CUDA\] SA built in \K[0-9.]+(?= ms)' || echo 0)
+    lcp_ms=$(echo "$out" | grep -oP '\[Kasai-(CPU|GPU)\] LCP built in \K[0-9.]+(?= ms)' || echo 0)
+
+    # Fallbacks / checks
+    [[ "$sa_ms" != "" ]] || sa_ms=0
+    [[ "$lcp_ms" != "" ]] || lcp_ms=0
+
+    time_ms=$(awk -v a="$sa_ms" -v b="$lcp_ms" 'BEGIN{printf("%.2f", a+b)}')
+    printf "cuda,%s,%s,%.2f,%.2f,%.2f\n" "$mb" "$run" "$sa_ms" "$lcp_ms" "$time_ms" >> "$RAW"
   done
 done
 
-# Compute summary with average time
-echo "mode,size_mb,avg_time_s" > "$CSV_SUM"
-awk -F, 'NR>1 { sum[$2]+=$4; count[$2]++ }
-         END { for (s in sum) printf "cuda,%s,%.6f\n", s, sum[s]/count[s] }' \
-    "$CSV_RAW" | sort -t, -k2n >> "$CSV_SUM"
+# Summary by size (avg)
+echo "mode,size_mb,avg_sa_ms,avg_lcp_ms,avg_total_ms" > "$SUM"
+awk -F, 'NR>1 {sa[$2]+=$4; lcp[$2]+=$5; tot[$2]+=$6; cnt[$2]++}
+         END {for (s in sa) printf "cuda,%s,%.2f,%.2f,%.2f\n", s, sa[s]/cnt[s], lcp[s]/cnt[s], tot[s]/cnt[s] }' \
+    "$RAW" | sort -t, -k2n >> "$SUM"
 
 echo "Finished CUDA benchmarks. Output saved to:"
-echo " - $CSV_RAW"
-echo " - $CSV_SUM"
+echo " - Raw : $RAW"
+echo " - Mean: $SUM"
