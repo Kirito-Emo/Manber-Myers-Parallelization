@@ -1,8 +1,13 @@
 .idea
-/cmake-build-debug*
+/cmake-build-*
 /mpi/mpi_chunks
 /random_strings/*.bin
 /perf-stats/seq_measurements/massif_seq_100MB.out
-/perf-stats/mpi_measurements/massif_mpi_8c_100MB.out
-/perf-stats/mpi_measurements/massif_mpi_4c_100MB.out
-/perf-stats/omp_measurements/threads_8/massif_omp_8.out
+/perf-stats/omp_measurements/threads_4/massif_omp_4t.out
+/perf-stats/omp_measurements/threads_8/massif_omp_8t.out
+/perf-stats/mpi_measurements/2r/massif_mpi_2r_100MB.out
+/perf-stats/mpi_measurements/4r/massif_mpi_4r_100MB.out
+/perf-stats/mpi_measurements/8r/massif_mpi_8r_100MB.out
+/perf-stats/mpi_omp_measurements/2r_8t/massif_mpi_omp_2r_8t_100MB.out
+/perf-stats/mpi_omp_measurements/4r_4t/massif_mpi_omp_4r_4t_100MB.out
+/perf-stats/mpi_omp_measurements/8r_2t/massif_mpi_omp_8r_2t_100MB.out

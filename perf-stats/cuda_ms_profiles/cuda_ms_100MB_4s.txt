@@ -1,0 +1,22 @@
+==PROF== Connected to process 82193 (/Manber-Myers-Parallelization/cmake-build-release/hpc_cuda_ms)
+[CUDA-MS] Input file: ../random_strings/string_100MB.bin | size: 104857600 bytes | streams=4
+[Kasai-CPU] LCP built in 4.80635 s
+=== Suffix-Array + LCP (CUDA multi-stream) ===
+streams=4
+time_io=0.074462 s
+time_alloc_host_dev=2.252295 s
+time_h2d=0.015710 s
+time_kernel_gpu=7.708249 s
+time_lcp_cpu=4.806347 s
+time_d2h=39.645676 s
+time_compute_pure=12.514596 s
+time_total_compute=14.766891 s
+time_transfers_comm=39.661387 s
+throughput=7.990670 MB/s
+speedup=2.812114
+efficiency=281.211446 %
+memory_overhead_ratio=283.835520 %
+[Result] LRS length=6   pos=5223142 (another occurrence at 88095714)
+LRS (hex): 07 44 AA 6E 28 A4 
+==PROF== Disconnected from process 82193
+==PROF== Report: /Manber-Myers-Parallelization/perf-stats/cuda_ms_profiles/cuda_ms_100MB_4s.ncu-rep

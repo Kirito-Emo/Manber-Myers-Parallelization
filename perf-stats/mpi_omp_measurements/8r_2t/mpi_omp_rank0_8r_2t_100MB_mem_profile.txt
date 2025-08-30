@@ -1,0 +1,306 @@
+--------------------------------------------------------------------------------
+Command:            ../cmake-build-release/hpc_mpi_omp 100
+Massif arguments:   --stacks=yes --massif-out-file=./mpi_omp_measurements/8r_2t/massif_mpi_omp_8c_2t_100MB.out
+ms_print arguments: ./mpi_omp_measurements/8r_2t/massif_mpi_omp_8c_2t_100MB.out
+--------------------------------------------------------------------------------
+
+
+    GB
+1.725^                                                                  ##### 
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |            @:::::@:::::::::::::::::::::::::::::::::::@:::::@:::::#    :
+     |            @: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     |            @: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     |            @: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     |            @: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     |            @: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     |            @: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     | ::@@:::::::@: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     | ::@@:::::::@: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+     | ::@@:::::::@: : :@:: :::::::::::: ::: : :::::: ::::::@:::::@:::::#    :
+   0 +----------------------------------------------------------------------->Gi
+     0                                                                   68.07
+
+Number of snapshots: 81
+ Detailed snapshots: [3, 4, 13, 18, 57, 67, 77, 78 (peak)]
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+  0              0                0                0             0            0
+  1  1,344,125,438      331,361,160      331,104,108       252,668        4,384
+  2  2,533,539,575      331,360,712      331,104,108       252,668        3,936
+  3  3,480,382,717      331,360,784      331,104,108       252,668        4,008
+99.92% (331,104,108B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->47.47% (157,286,400B) 0x403FEC: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->47.47% (157,286,400B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->15.82% (52,428,800B) 0x403F47: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->15.82% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->15.82% (52,428,800B) 0x403F8E: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->15.82% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->15.82% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->15.82% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->15.82% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->03.96% (13,107,200B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->03.96% (13,107,200B) 0x400D3B: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->01.03% (3,424,108B) in 826 places, all below massif's threshold (1.00%)
+  
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+  4  4,105,536,047      331,360,720      331,104,108       252,668        3,944
+99.92% (331,104,108B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->47.47% (157,286,400B) 0x403FEC: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->47.47% (157,286,400B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->15.82% (52,428,800B) 0x403F47: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->15.82% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->15.82% (52,428,800B) 0x403F8E: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->15.82% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->15.82% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->15.82% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->15.82% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->03.96% (13,107,200B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->03.96% (13,107,200B) 0x400D3B: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->01.03% (3,424,108B) in 826 places, all below massif's threshold (1.00%)
+  
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+  5  5,213,276,211      331,360,336      331,104,108       252,668        3,560
+  6  6,375,993,668      331,361,168      331,104,108       252,668        4,392
+  7  7,562,730,937      331,360,528      331,104,108       252,668        3,752
+  8  8,387,026,767      331,360,656      331,104,108       252,668        3,880
+  9  9,385,860,447      331,360,336      331,104,108       252,668        3,560
+ 10 10,521,882,024      331,360,720      331,104,108       252,668        3,944
+ 11 11,439,735,162      331,360,720      331,104,108       252,668        3,944
+ 12 12,229,941,689      331,360,784      331,104,108       252,668        4,008
+ 13 13,104,458,921    1,012,990,440    1,012,733,940       252,884        3,616
+99.97% (1,012,733,940B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->41.41% (419,430,432B) 0x402BD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x400FA7: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.00% (32B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->41.41% (419,430,400B) 0x403779: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x401456: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->11.65% (117,964,800B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->10.35% (104,857,600B) 0x4013D8: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->01.29% (13,107,200B) 0x400D3B: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->05.18% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->05.18% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->05.18% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->00.34% (3,479,508B) in 1+ places, all below ms_print's threshold (01.00%)
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 14 13,991,860,934    1,012,990,656    1,012,734,100       252,900        3,656
+ 15 15,273,664,193    1,012,990,656    1,012,734,100       252,900        3,656
+ 16 16,146,600,187    1,012,990,528    1,012,734,100       252,900        3,528
+ 17 17,456,004,022    1,012,990,656    1,012,734,100       252,900        3,656
+ 18 18,590,820,984    1,012,990,568    1,012,734,100       252,900        3,568
+99.97% (1,012,734,100B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->41.41% (419,430,432B) 0x402BD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x400FA7: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.00% (32B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->41.41% (419,430,400B) 0x403779: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x401456: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->11.65% (117,964,800B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->10.35% (104,857,600B) 0x4013D8: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->01.29% (13,107,200B) 0x400D3B: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->05.18% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->05.18% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->05.18% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->00.34% (3,479,668B) in 1+ places, all below ms_print's threshold (01.00%)
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 19 19,376,463,654    1,012,990,656    1,012,734,100       252,900        3,656
+ 20 20,074,812,631    1,012,990,656    1,012,734,100       252,900        3,656
+ 21 21,122,335,761    1,012,990,528    1,012,734,100       252,900        3,528
+ 22 22,344,445,864    1,012,990,696    1,012,734,100       252,900        3,696
+ 23 23,217,381,994    1,012,990,568    1,012,734,100       252,900        3,568
+ 24 24,003,024,132    1,012,990,656    1,012,734,100       252,900        3,656
+ 25 24,963,253,985    1,012,990,656    1,012,734,100       252,900        3,656
+ 26 25,923,483,929    1,012,990,568    1,012,734,100       252,900        3,568
+ 27 26,621,832,733    1,012,990,568    1,012,734,100       252,900        3,568
+ 28 27,582,062,647    1,012,990,656    1,012,734,100       252,900        3,656
+ 29 28,978,760,132    1,012,990,528    1,012,734,100       252,900        3,528
+ 30 29,851,695,902    1,012,990,528    1,012,734,100       252,900        3,528
+ 31 31,161,100,191    1,012,990,568    1,012,734,100       252,900        3,568
+ 32 32,208,623,649    1,012,990,696    1,012,734,100       252,900        3,696
+ 33 33,430,735,210    1,012,990,656    1,012,734,100       252,900        3,656
+ 34 34,478,259,886    1,012,990,528    1,012,734,100       252,900        3,528
+ 35 35,874,959,126    1,012,990,656    1,012,734,100       252,900        3,656
+ 36 36,573,308,932    1,012,990,696    1,012,734,100       252,900        3,696
+ 37 37,620,833,345    1,012,990,696    1,012,734,100       252,900        3,696
+ 38 38,319,183,083    1,012,990,568    1,012,734,100       252,900        3,568
+ 39 39,715,882,287    1,012,990,656    1,012,734,100       252,900        3,656
+ 40 40,414,232,051    1,012,986,944    1,012,730,490       252,798        3,656
+ 41 41,810,931,235    1,012,986,816    1,012,730,490       252,798        3,528
+ 42 42,858,455,732    1,012,986,856    1,012,730,490       252,798        3,568
+ 43 43,905,980,322    1,012,986,856    1,012,730,490       252,798        3,568
+ 44 44,604,330,076    1,012,986,944    1,012,730,490       252,798        3,656
+ 45 45,651,854,559    1,012,986,984    1,012,730,490       252,798        3,696
+ 46 46,350,204,308    1,012,986,944    1,012,730,490       252,798        3,656
+ 47 47,397,728,856    1,012,986,856    1,012,730,490       252,798        3,568
+ 48 48,794,428,537    1,012,986,944    1,012,730,490       252,798        3,656
+ 49 50,191,127,782    1,012,986,816    1,012,730,490       252,798        3,528
+ 50 50,816,281,302    1,012,986,944    1,012,730,490       252,798        3,656
+ 51 51,441,434,854    1,012,986,856    1,012,730,490       252,798        3,568
+ 52 52,066,588,260    1,012,986,984    1,012,730,490       252,798        3,696
+ 53 52,691,741,661    1,012,986,944    1,012,730,490       252,798        3,656
+ 54 53,316,895,043    1,012,986,856    1,012,730,490       252,798        3,568
+ 55 53,942,048,382    1,012,986,984    1,012,730,490       252,798        3,696
+ 56 54,567,201,730    1,012,986,944    1,012,730,490       252,798        3,656
+ 57 55,192,355,230    1,012,986,856    1,012,730,490       252,798        3,568
+99.97% (1,012,730,490B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->41.41% (419,430,432B) 0x402BD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x400FA7: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.00% (32B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->41.41% (419,430,400B) 0x403779: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x401456: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->11.65% (117,964,800B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->10.35% (104,857,600B) 0x4013D8: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->01.29% (13,107,200B) 0x400D3B: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->05.18% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->05.18% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->05.18% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->00.34% (3,476,058B) in 1+ places, all below ms_print's threshold (01.00%)
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 58 55,817,508,693    1,012,986,944    1,012,730,490       252,798        3,656
+ 59 56,442,662,104    1,012,986,944    1,012,730,490       252,798        3,656
+ 60 57,067,815,450    1,012,986,856    1,012,730,490       252,798        3,568
+ 61 57,692,968,801    1,012,986,856    1,012,730,490       252,798        3,568
+ 62 58,318,122,299    1,012,986,856    1,012,730,490       252,798        3,568
+ 63 58,943,275,762    1,012,986,856    1,012,730,490       252,798        3,568
+ 64 59,568,429,223    1,012,986,856    1,012,730,490       252,798        3,568
+ 65 60,193,582,573    1,012,986,816    1,012,730,490       252,798        3,528
+ 66 60,818,735,996    1,012,986,944    1,012,730,490       252,798        3,656
+ 67 61,443,889,445    1,012,986,856    1,012,730,490       252,798        3,568
+99.97% (1,012,730,490B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->41.41% (419,430,432B) 0x402BD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x400FA7: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.00% (32B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->41.41% (419,430,400B) 0x403779: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->41.41% (419,430,400B) 0x401456: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->11.65% (117,964,800B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->10.35% (104,857,600B) 0x4013D8: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->01.29% (13,107,200B) 0x400D3B: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->05.18% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->05.18% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->05.18% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->00.34% (3,476,058B) in 1+ places, all below ms_print's threshold (01.00%)
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 68 62,069,042,902    1,012,986,984    1,012,730,490       252,798        3,696
+ 69 62,694,196,250    1,012,986,944    1,012,730,490       252,798        3,656
+ 70 63,319,349,612    1,012,986,984    1,012,730,490       252,798        3,696
+ 71 63,944,502,952    1,012,986,816    1,012,730,490       252,798        3,528
+ 72 64,569,656,289    1,012,986,856    1,012,730,490       252,798        3,568
+ 73 65,194,809,671    1,012,986,856    1,012,730,490       252,798        3,568
+ 74 65,819,963,005    1,012,986,944    1,012,730,490       252,798        3,656
+ 75 66,445,116,504    1,012,986,944    1,012,730,490       252,798        3,656
+ 76 67,070,269,899    1,012,986,856    1,012,730,490       252,798        3,568
+ 77 67,384,893,221    1,432,420,904    1,432,160,694       256,802        3,408
+99.98% (1,432,160,694B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->58.56% (838,860,832B) 0x402BD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->29.28% (419,430,400B) 0x400FA7: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->29.28% (419,430,400B) 0x401492: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.00% (32B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->29.28% (419,430,400B) 0x403779: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->29.28% (419,430,400B) 0x401456: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->08.24% (117,964,800B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->07.32% (104,857,600B) 0x4013D8: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.92% (13,107,200B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->03.66% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->03.66% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->03.66% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->00.24% (3,475,862B) in 1+ places, all below ms_print's threshold (01.00%)
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 78 67,407,830,909    1,851,855,344    1,851,591,094       260,842        3,408
+99.99% (1,851,591,094B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->67.95% (1,258,291,232B) 0x402BD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->22.65% (419,430,400B) 0x400FA7: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->22.65% (419,430,400B) 0x401492: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->22.65% (419,430,400B) 0x4014A8: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.00% (32B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->22.65% (419,430,400B) 0x403779: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->22.65% (419,430,400B) 0x401456: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   
+->06.37% (117,964,800B) 0x4029FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->05.66% (104,857,600B) 0x4013D8: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| | 
+| ->00.71% (13,107,200B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->02.83% (52,428,800B) 0x404598: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+| ->02.83% (52,428,800B) 0x4043F1: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|   ->02.83% (52,428,800B) 0x400E72: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi_omp)
+|     
+->00.19% (3,475,862B) in 1+ places, all below ms_print's threshold (01.00%)
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 79 72,463,930,012    1,851,855,256    1,851,591,094       260,842        3,320
+ 80 73,093,075,714    1,851,855,224    1,851,591,094       260,842        3,288

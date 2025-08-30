@@ -8,21 +8,23 @@
 // Builds a suffix array using the doubling algorithm on a chunk of text (parallelized with OpenMP)
 void build_suffix_array_subset(const std::vector<uint8_t> &chunk, std::vector<int> &sa_out)
 {
-    int n = chunk.size();
+    const int n = static_cast<int>(chunk.size());
     sa_out.resize(n);
+    if (n == 0)
+        return;
 
     std::vector<int> rk(n), tmp(n);
+    std::vector<std::pair<std::pair<int, int>, int>> bucket(n);
 
 // Initial rank = character value
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i)
-        rk[i] = chunk[i];
-
-    std::vector<std::pair<std::pair<int, int>, int>> bucket(n);
+        rk[i] = static_cast<int>(chunk[i]);
 
     for (int k = 1; k < n; k <<= 1)
     {
-#pragma omp parallel for
+// Fill buckets in parallel
+#pragma omp parallel for schedule(static)
         for (int i = 0; i < n; ++i)
         {
             bucket[i].first.first = rk[i];
@@ -30,12 +32,13 @@ void build_suffix_array_subset(const std::vector<uint8_t> &chunk, std::vector<in
             bucket[i].second = i;
         }
 
+        // Sort by (rank, next rank) — sequential for determinism and simplicity
         std::sort(bucket.begin(), bucket.end());
 
+        // Reassign new ranks (sequential; depends on previous element)
         int r = 0;
         tmp[bucket[0].second] = r;
 
-        // Assign new ranks (sequentially because depends on previous)
         for (int i = 1; i < n; ++i)
         {
             if (bucket[i].first != bucket[i - 1].first)
@@ -43,16 +46,17 @@ void build_suffix_array_subset(const std::vector<uint8_t> &chunk, std::vector<in
             tmp[bucket[i].second] = r;
         }
 
-// Write new ranks
-#pragma omp parallel for
+// Write back ranks (parallel)
+#pragma omp parallel for schedule(static)
         for (int i = 0; i < n; ++i)
             rk[i] = tmp[i];
 
         if (r == n - 1)
-            break;
+            break; // early exit if all ranks are unique
     }
 
-#pragma omp parallel for
+// Extract final sorted order
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i)
         sa_out[i] = bucket[i].second;
 }
@@ -61,7 +65,7 @@ void build_suffix_array_subset(const std::vector<uint8_t> &chunk, std::vector<in
 void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<int> &all_sa,
                           const std::vector<int> &counts, std::vector<int> &sa_out)
 {
-    int P = counts.size();
+    const int P = static_cast<int>(counts.size());
     std::vector<int> displs(P + 1, 0);
 
     for (int r = 0; r < P; ++r)
@@ -80,14 +84,15 @@ void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<in
         Cmp(const std::vector<uint8_t> &t) : txt(t) {}
         bool operator()(const Item &a, const Item &b) const
         {
-            int i = a.idx, j = b.idx, n = txt.size();
+            int i = static_cast<int>(a.idx), j = static_cast<int>(b.idx), n = static_cast<int>(txt.size());
             while (i < n && j < n && txt[i] == txt[j])
                 ++i, ++j;
             if (i == n)
-                return false;
+                return false; // a is shorter => a < b
             if (j == n)
-                return true;
-            return txt[i] > txt[j];
+                return true; // b is shorter => a > b
+
+            return txt[i] > txt[j]; // min-heap
         }
     };
 
@@ -97,18 +102,18 @@ void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<in
     std::vector<int> offs(P, 0);
     std::priority_queue<Item, std::vector<Item>, Cmp> pq(Cmp{text});
 
+    const size_t chunk_len = text.size() / P; // assumption: near-even chunks
     for (int r = 0; r < P; ++r)
         if (counts[r] > 0)
-            pq.push({all_sa[displs[r]] + r * (text.size() / P), r}), offs[r] = 1;
+            pq.push({static_cast<size_t>(all_sa[displs[r]]) + r * chunk_len, r}), offs[r] = 1;
 
     while (!pq.empty())
     {
         Item cur = pq.top();
         pq.pop();
-        sa_out.push_back(cur.idx);
-        int r = cur.which;
-
+        sa_out.push_back(static_cast<int>(cur.idx));
+        const int r = cur.which;
         if (offs[r] < counts[r])
-            pq.push({all_sa[displs[r] + offs[r]++] + r * (text.size() / P), r});
+            pq.push({static_cast<size_t>(all_sa[displs[r] + offs[r]++]) + r * chunk_len, r});
     }
 }

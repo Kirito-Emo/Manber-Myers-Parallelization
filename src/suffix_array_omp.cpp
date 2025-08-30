@@ -8,10 +8,12 @@
 void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, std::vector<int> &rank,
                         std::vector<int> &cnt, std::vector<int> &next, std::vector<bool> &bh, std::vector<bool> &b2h)
 {
-    int n = text.size();
+    const int n = static_cast<int>(text.size());
+    if (n <= 0)
+        return;
 
     // Initialize sa[i] = i
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i)
         sa[i] = i;
 
@@ -19,7 +21,7 @@ void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, 
     std::sort(sa.begin(), sa.end(), [&](int a, int b) { return text[a] < text[b]; });
 
     // Mark initial bucket heads and clear b2h
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i)
     {
         bh[i] = (i == 0 || text[sa[i]] != text[sa[i - 1]]);
@@ -59,10 +61,10 @@ void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, 
         {
             for (int j = i; j < next[i]; ++j)
             {
-                int s = sa[j] - h;
+                const int s = sa[j] - h;
                 if (s >= 0)
                 {
-                    int head = rank[s];
+                    const int head = rank[s];
                     rank[s] = head + cnt[head]++;
                     b2h[rank[s]] = true;
                 }
@@ -70,7 +72,7 @@ void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, 
 
             for (int j = i; j < next[i]; ++j)
             {
-                int s = sa[j] - h;
+                const int s = sa[j] - h;
                 if (s >= 0 && b2h[rank[s]])
                 {
                     for (int k = rank[s] + 1; k < n && !bh[k] && b2h[k]; ++k)
@@ -80,7 +82,7 @@ void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, 
         }
 
         // Rebuild sa and update bh
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
         for (int i = 0; i < n; ++i)
         {
             sa[rank[i]] = i;
@@ -89,7 +91,7 @@ void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, 
     }
 
     // Final inverse rank
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i)
         rank[sa[i]] = i;
 }
@@ -98,18 +100,19 @@ void build_suffix_array(const std::vector<uint8_t> &text, std::vector<int> &sa, 
 void build_lcp(const std::vector<uint8_t> &text, const std::vector<int> &sa, std::vector<int> &rank,
                std::vector<int> &lcp)
 {
-    int n = text.size();
+    const int n = static_cast<int>(text.size());
+    if (n <= 0)
+        return;
 
     // Compute rank[i] = index of suffix starting at i in SA
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < n; ++i)
         rank[sa[i]] = i;
 
     lcp[0] = 0;
-    int h = 0;
 
-    // Build LCP array
-    for (int i = 0; i < n; ++i)
+    // Main loop: has inherent dependencies via 'h' trick; keep sequential (fast enough vs SA)
+    for (int i = 0, h = 0; i < n; ++i)
     {
         if (rank[i] > 0)
         {

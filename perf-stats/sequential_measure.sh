@@ -4,7 +4,7 @@ set -euo pipefail
 # Created by Emanuele (https://github.com/Kirito-Emo)
 
 # CONFIGURATION
-BIN=../cmake-build-debug/hpc        # path to binary
+BIN=../cmake-build-release/hpc      # path to binary
 RUNS=10                             # how many repeats per size
 SIZES=(1 50 100 200 500)            # sizes in MB
 OUTPUT_DIR=seq_measurements         # output directory
@@ -26,43 +26,44 @@ if [[ ! -d $PWD/$OUTPUT_DIR ]]; then
 fi
 
 # Stats CSV
-echo "size,run,build_time" > seq_stats.csv
+STATS_CSV="seq_stats.csv"
+echo "size,run,time_compute_pure_s" > "$STATS_CSV"
 
 for mb in "${SIZES[@]}"; do
-  for run in $(seq 1 $RUNS); do
-    # Invoke program and grab time_build
-    t=$("$BIN" "$mb" \
-          | grep -m1 -o 'time_build=[0-9]\+\(\.[0-9]\+\)\?' \
-          | cut -d= -f2)
-    # Append MB to size and “s” to build time
-    echo "${mb}MB,${run},${t}s" >> seq_stats.csv
+  for run in $(seq 1 "$RUNS"); do
+    out=$("$BIN" "$mb")
+    t=$(echo "$out" | grep -m1 -o 'time_compute_pure=[0-9]\+\(\.[0-9]\+\)\?' | cut -d= -f2)
+    if [[ -z "${t}" ]]; then
+      echo "Error: could not parse time_compute_pure for size ${mb}MB (run ${run})."
+      echo "Program output was:"
+      echo "$out"
+      exit 3
+    fi
+    echo "${mb}MB,${run},${t}" >> "$STATS_CSV"
   done
 done
 
 # Summary CSV
-echo "size,avg_build_time" > seq_summary.csv
-
+SUMMARY_CSV="seq_summary.csv"
+echo "size,avg_time_compute_pure_s" > "$SUMMARY_CSV"
 awk -F, '
   NR>1 {
-    val = substr($3, 1, length($3)-1)
-    sum[$1] += val
+    sum[$1] += $3
     cnt[$1]++
   }
   END {
     for (sz in sum) {
-      printf "%s,%.6fs\n", sz, sum[sz]/cnt[sz]
+      printf "%s,%.6f\n", sz, sum[sz]/cnt[sz]
     }
   }
-' seq_stats.csv \
-  | sort -t, -k1,1V \
-  >> seq_summary.csv
+' "$STATS_CSV" | sort -t, -k1,1V >> "$SUMMARY_CSV"
 
 # Report
 echo "Sequential performance statistics:"
-echo "- Detailed runs in   seq_stats.csv"
-echo "- Average times in   seq_summary.csv"
+echo "- Detailed runs:   $STATS_CSV"
+echo "- Averages:        $SUMMARY_CSV"
 
 # Move output files to the output directory
-mv seq_stats.csv "$OUTPUT_DIR"/
-mv seq_summary.csv "$OUTPUT_DIR"/
+mv "$STATS_CSV" "$OUTPUT_DIR"/
+mv "$SUMMARY_CSV" "$OUTPUT_DIR"/
 echo "Output files moved to $OUTPUT_DIR/"

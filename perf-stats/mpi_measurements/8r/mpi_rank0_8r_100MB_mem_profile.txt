@@ -1,0 +1,808 @@
+--------------------------------------------------------------------------------
+Command:            ../cmake-build-release/hpc_mpi 100
+Massif arguments:   --stacks=yes --massif-out-file=./mpi_measurements/massif_mpi_8c_100MB.out
+ms_print arguments: ./mpi_measurements/massif_mpi_8c_100MB.out
+--------------------------------------------------------------------------------
+
+
+    GB
+1.875^                                                                  ##### 
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |                                                                  #    :
+     |             ::::@@:::::::::::@@::::::@:::@:::::::::::::::::::::@@#    :
+     |             ::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |             ::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |             ::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |             ::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |             ::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |             ::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |:::::::@:::::::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |: :::: @: : :::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |: :::: @: : :::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+     |: :::: @: : :::: @ :::::: ::::@ : ::: @:: @: :::: :: :::: : : ::@ #    :
+   0 +----------------------------------------------------------------------->Gi
+     0                                                                   68.90
+
+Number of snapshots: 52
+ Detailed snapshots: [6, 13, 24, 29, 32, 48, 49 (peak)]
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+  0              0                0                0             0            0
+  1    926,697,472      493,103,240      492,810,378       288,406        4,456
+  2  2,165,537,349      493,102,600      492,810,378       288,406        3,816
+  3  3,356,349,594      493,102,664      492,810,378       288,406        3,880
+  4  4,274,040,929      493,103,048      492,810,378       288,406        4,264
+  5  5,369,529,196      493,102,472      492,810,378       288,406        3,688
+  6  7,196,516,453      493,103,240      492,810,378       288,406        4,456
+99.94% (492,810,378B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->31.90% (157,286,400B) 0x403A9A: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->31.90% (157,286,400B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->30.63% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3829)
+| ->30.63% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3925)
+|   ->30.63% (151,019,520B) 0x57E686E: psm3_ips_scbctrl_init.isra.0 (ips_scb.c:93)
+|     ->18.16% (89,530,368B) 0x57DB11A: UnknownInlinedFun (ips_proto_am.c:129)
+|     | ->18.16% (89,530,368B) 0x57DB11A: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->18.16% (89,530,368B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->18.16% (89,530,368B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->18.16% (89,530,368B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->18.16% (89,530,368B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->09.08% (44,765,184B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->09.08% (44,765,184B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->09.08% (44,765,184B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->09.08% (44,765,184B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->09.08% (44,765,184B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->09.08% (44,765,184B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->09.08% (44,765,184B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->09.08% (44,765,184B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->09.08% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->09.08% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->09.08% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->09.08% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->09.08% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->09.08% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->09.08% (44,765,184B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->09.08% (44,765,184B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->09.08% (44,765,184B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->09.08% (44,765,184B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->09.08% (44,765,184B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->09.08% (44,765,184B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->09.08% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->09.08% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->09.08% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->09.08% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->09.08% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->09.08% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->09.07% (44,703,744B) 0x57DB0E7: UnknownInlinedFun (ips_proto_am.c:119)
+|     | ->09.07% (44,703,744B) 0x57DB0E7: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->09.07% (44,703,744B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->09.07% (44,703,744B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->09.07% (44,703,744B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->09.07% (44,703,744B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->04.53% (22,351,872B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->04.53% (22,351,872B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->04.53% (22,351,872B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->04.53% (22,351,872B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->04.53% (22,351,872B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->04.53% (22,351,872B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->04.53% (22,351,872B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->04.53% (22,351,872B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->04.53% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->04.53% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->04.53% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->04.53% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->04.53% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->04.53% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->04.53% (22,351,872B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->04.53% (22,351,872B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->04.53% (22,351,872B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->04.53% (22,351,872B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->04.53% (22,351,872B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->04.53% (22,351,872B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->04.53% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->04.53% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->04.53% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->04.53% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->04.53% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->04.53% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->03.40% (16,785,408B) 0x57DB009: psm3_ips_proto_init (ips_proto.c:405)
+|       ->03.40% (16,785,408B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|         ->03.40% (16,785,408B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|           ->03.40% (16,785,408B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|             ->03.40% (16,785,408B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|               ->01.70% (8,392,704B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|               | ->01.70% (8,392,704B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|               |   ->01.70% (8,392,704B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|               |     ->01.70% (8,392,704B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|               |       ->01.70% (8,392,704B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|               |         ->01.70% (8,392,704B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|               |           ->01.70% (8,392,704B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|               |             ->01.70% (8,392,704B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|               |               ->01.70% (8,392,704B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|               |                 ->01.70% (8,392,704B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|               |                   ->01.70% (8,392,704B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|               |                     ->01.70% (8,392,704B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|               |                       ->01.70% (8,392,704B) 0x48D06F9: PMPI_Init (init.c:67)
+|               |                         ->01.70% (8,392,704B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|               |                           
+|               ->01.70% (8,392,704B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|                 ->01.70% (8,392,704B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|                   ->01.70% (8,392,704B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|                     ->01.70% (8,392,704B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|                       ->01.70% (8,392,704B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|                         ->01.70% (8,392,704B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|                           ->01.70% (8,392,704B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|                             ->01.70% (8,392,704B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|                               ->01.70% (8,392,704B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|                                 ->01.70% (8,392,704B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|                                   ->01.70% (8,392,704B) 0x48D06F9: PMPI_Init (init.c:67)
+|                                     ->01.70% (8,392,704B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|                                       
+->10.63% (52,428,800B) 0x4038BF: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->10.63% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->10.63% (52,428,800B) 0x4038F3: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->10.63% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->10.63% (52,428,800B) 0x404098: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->10.63% (52,428,800B) 0x40389D: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   ->10.63% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     
+->02.86% (14,110,858B) in 901 places, all below massif's threshold (1.00%)
+| 
+->02.66% (13,107,200B) 0x4028FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+  ->02.66% (13,107,200B) 0x400CF0: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+    
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+  7  8,557,351,165      493,102,792      492,810,378       288,406        4,008
+  8 10,531,527,692      493,102,664      492,810,378       288,406        3,880
+  9 12,407,676,493      493,102,600      492,810,378       288,406        3,816
+ 10 13,957,958,065    1,174,678,968    1,174,386,466       288,550        3,952
+ 11 14,925,023,859    1,174,678,840    1,174,386,466       288,550        3,824
+ 12 16,167,127,062    1,174,678,968    1,174,386,466       288,550        3,952
+ 13 18,074,532,719    1,174,678,840    1,174,386,466       288,550        3,824
+99.98% (1,174,386,466B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->35.71% (419,430,400B) 0x402AD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x400F67: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->35.71% (419,430,400B) 0x4030BF: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x40136F: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3829)
+| ->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3925)
+|   ->12.86% (151,019,520B) 0x57E686E: psm3_ips_scbctrl_init.isra.0 (ips_scb.c:93)
+|     ->07.62% (89,530,368B) 0x57DB11A: UnknownInlinedFun (ips_proto_am.c:129)
+|     | ->07.62% (89,530,368B) 0x57DB11A: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->07.62% (89,530,368B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->07.62% (89,530,368B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->07.62% (89,530,368B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->07.62% (89,530,368B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->03.81% (44,765,184B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->03.81% (44,765,184B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->03.81% (44,765,184B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->03.81% (44,765,184B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->03.81% (44,765,184B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->03.81% (44,765,184B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->03.81% (44,765,184B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->03.81% (44,765,184B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->03.81% (44,765,184B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->03.81% (44,765,184B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->03.81% (44,703,744B) 0x57DB0E7: UnknownInlinedFun (ips_proto_am.c:119)
+|     | ->03.81% (44,703,744B) 0x57DB0E7: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->03.81% (44,703,744B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->03.81% (44,703,744B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->03.81% (44,703,744B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->03.81% (44,703,744B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->01.90% (22,351,872B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->01.90% (22,351,872B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->01.90% (22,351,872B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->01.90% (22,351,872B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->01.90% (22,351,872B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->01.90% (22,351,872B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->01.90% (22,351,872B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->01.90% (22,351,872B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->01.90% (22,351,872B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->01.90% (22,351,872B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->01.43% (16,785,408B) 0x57DB009: psm3_ips_proto_init (ips_proto.c:405)
+|       ->01.43% (16,785,408B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|         ->01.43% (16,785,408B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|           ->01.43% (16,785,408B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|             ->01.43% (16,785,408B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|               ->01.43% (16,785,408B) in 2 places, all below massif's threshold (1.00%)
+|                 
+->10.04% (117,964,800B) 0x4028FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->08.93% (104,857,600B) 0x4012F1: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->01.12% (13,107,200B) 0x400CF0: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->04.46% (52,428,800B) 0x404098: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->04.46% (52,428,800B) 0x40389D: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   ->04.46% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     
+->01.20% (14,112,546B) in 911 places, all below massif's threshold (1.00%)
+  
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 14 19,840,649,163    1,174,678,928    1,174,386,466       288,550        3,912
+ 15 21,182,897,465    1,174,678,928    1,174,386,466       288,550        3,912
+ 16 22,101,277,998    1,174,678,840    1,174,386,466       288,550        3,824
+ 17 23,160,947,516    1,174,678,968    1,174,386,466       288,550        3,952
+ 18 24,573,840,854    1,174,678,928    1,174,386,466       288,550        3,912
+ 19 25,562,865,927    1,174,678,968    1,174,386,466       288,550        3,952
+ 20 26,763,825,277    1,174,678,968    1,174,386,466       288,550        3,952
+ 21 28,106,073,327    1,174,678,968    1,174,386,466       288,550        3,952
+ 22 29,024,453,665    1,174,678,968    1,174,386,466       288,550        3,952
+ 23 30,117,726,699    1,174,678,928    1,174,386,466       288,550        3,912
+ 24 31,665,032,607    1,174,678,928    1,174,386,466       288,550        3,912
+99.98% (1,174,386,466B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->35.71% (419,430,400B) 0x402AD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x400F67: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->35.71% (419,430,400B) 0x4030BF: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x40136F: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3829)
+| ->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3925)
+|   ->12.86% (151,019,520B) 0x57E686E: psm3_ips_scbctrl_init.isra.0 (ips_scb.c:93)
+|     ->07.62% (89,530,368B) 0x57DB11A: UnknownInlinedFun (ips_proto_am.c:129)
+|     | ->07.62% (89,530,368B) 0x57DB11A: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->07.62% (89,530,368B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->07.62% (89,530,368B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->07.62% (89,530,368B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->07.62% (89,530,368B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->03.81% (44,765,184B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->03.81% (44,765,184B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->03.81% (44,765,184B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->03.81% (44,765,184B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->03.81% (44,765,184B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->03.81% (44,765,184B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->03.81% (44,765,184B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->03.81% (44,765,184B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->03.81% (44,765,184B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->03.81% (44,765,184B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->03.81% (44,703,744B) 0x57DB0E7: UnknownInlinedFun (ips_proto_am.c:119)
+|     | ->03.81% (44,703,744B) 0x57DB0E7: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->03.81% (44,703,744B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->03.81% (44,703,744B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->03.81% (44,703,744B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->03.81% (44,703,744B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->01.90% (22,351,872B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->01.90% (22,351,872B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->01.90% (22,351,872B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->01.90% (22,351,872B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->01.90% (22,351,872B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->01.90% (22,351,872B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->01.90% (22,351,872B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->01.90% (22,351,872B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->01.90% (22,351,872B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->01.90% (22,351,872B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->01.43% (16,785,408B) 0x57DB009: psm3_ips_proto_init (ips_proto.c:405)
+|       ->01.43% (16,785,408B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|         ->01.43% (16,785,408B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|           ->01.43% (16,785,408B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|             ->01.43% (16,785,408B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|               ->01.43% (16,785,408B) in 2 places, all below massif's threshold (1.00%)
+|                 
+->10.04% (117,964,800B) 0x4028FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->08.93% (104,857,600B) 0x4012F1: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->01.12% (13,107,200B) 0x400CF0: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->04.46% (52,428,800B) 0x404098: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->04.46% (52,428,800B) 0x40389D: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   ->04.46% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     
+->01.20% (14,112,546B) in 911 places, all below massif's threshold (1.00%)
+  
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 25 33,212,338,287    1,174,678,928    1,174,386,466       288,550        3,912
+ 26 35,146,470,638    1,174,678,928    1,174,386,466       288,550        3,912
+ 27 36,693,776,442    1,174,678,928    1,174,386,466       288,550        3,912
+ 28 37,854,255,780    1,174,678,928    1,174,386,466       288,550        3,912
+ 29 39,401,561,583    1,174,678,840    1,174,386,466       288,550        3,824
+99.98% (1,174,386,466B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->35.71% (419,430,400B) 0x402AD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x400F67: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->35.71% (419,430,400B) 0x4030BF: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x40136F: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3829)
+| ->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3925)
+|   ->12.86% (151,019,520B) 0x57E686E: psm3_ips_scbctrl_init.isra.0 (ips_scb.c:93)
+|     ->07.62% (89,530,368B) 0x57DB11A: UnknownInlinedFun (ips_proto_am.c:129)
+|     | ->07.62% (89,530,368B) 0x57DB11A: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->07.62% (89,530,368B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->07.62% (89,530,368B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->07.62% (89,530,368B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->07.62% (89,530,368B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->03.81% (44,765,184B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->03.81% (44,765,184B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->03.81% (44,765,184B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->03.81% (44,765,184B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->03.81% (44,765,184B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->03.81% (44,765,184B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->03.81% (44,765,184B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->03.81% (44,765,184B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->03.81% (44,765,184B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->03.81% (44,765,184B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->03.81% (44,703,744B) 0x57DB0E7: UnknownInlinedFun (ips_proto_am.c:119)
+|     | ->03.81% (44,703,744B) 0x57DB0E7: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->03.81% (44,703,744B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->03.81% (44,703,744B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->03.81% (44,703,744B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->03.81% (44,703,744B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->01.90% (22,351,872B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->01.90% (22,351,872B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->01.90% (22,351,872B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->01.90% (22,351,872B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->01.90% (22,351,872B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->01.90% (22,351,872B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->01.90% (22,351,872B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->01.90% (22,351,872B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->01.90% (22,351,872B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->01.90% (22,351,872B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->01.43% (16,785,408B) 0x57DB009: psm3_ips_proto_init (ips_proto.c:405)
+|       ->01.43% (16,785,408B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|         ->01.43% (16,785,408B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|           ->01.43% (16,785,408B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|             ->01.43% (16,785,408B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|               ->01.43% (16,785,408B) in 2 places, all below massif's threshold (1.00%)
+|                 
+->10.04% (117,964,800B) 0x4028FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->08.93% (104,857,600B) 0x4012F1: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->01.12% (13,107,200B) 0x400CF0: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->04.46% (52,428,800B) 0x404098: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->04.46% (52,428,800B) 0x40389D: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   ->04.46% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     
+->01.20% (14,112,546B) in 911 places, all below massif's threshold (1.00%)
+  
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 30 40,562,040,925    1,174,678,968    1,174,386,466       288,550        3,952
+ 31 42,109,346,863    1,174,678,928    1,174,386,466       288,550        3,912
+ 32 43,269,826,061    1,174,678,968    1,174,386,466       288,550        3,952
+99.98% (1,174,386,466B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->35.71% (419,430,400B) 0x402AD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x400F67: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->35.71% (419,430,400B) 0x4030BF: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x40136F: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3829)
+| ->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3925)
+|   ->12.86% (151,019,520B) 0x57E686E: psm3_ips_scbctrl_init.isra.0 (ips_scb.c:93)
+|     ->07.62% (89,530,368B) 0x57DB11A: UnknownInlinedFun (ips_proto_am.c:129)
+|     | ->07.62% (89,530,368B) 0x57DB11A: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->07.62% (89,530,368B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->07.62% (89,530,368B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->07.62% (89,530,368B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->07.62% (89,530,368B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->03.81% (44,765,184B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->03.81% (44,765,184B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->03.81% (44,765,184B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->03.81% (44,765,184B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->03.81% (44,765,184B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->03.81% (44,765,184B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->03.81% (44,765,184B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->03.81% (44,765,184B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->03.81% (44,765,184B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->03.81% (44,765,184B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->03.81% (44,703,744B) 0x57DB0E7: UnknownInlinedFun (ips_proto_am.c:119)
+|     | ->03.81% (44,703,744B) 0x57DB0E7: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->03.81% (44,703,744B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->03.81% (44,703,744B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->03.81% (44,703,744B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->03.81% (44,703,744B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->01.90% (22,351,872B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->01.90% (22,351,872B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->01.90% (22,351,872B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->01.90% (22,351,872B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->01.90% (22,351,872B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->01.90% (22,351,872B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->01.90% (22,351,872B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->01.90% (22,351,872B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->01.90% (22,351,872B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->01.90% (22,351,872B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->01.43% (16,785,408B) 0x57DB009: psm3_ips_proto_init (ips_proto.c:405)
+|       ->01.43% (16,785,408B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|         ->01.43% (16,785,408B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|           ->01.43% (16,785,408B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|             ->01.43% (16,785,408B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|               ->01.43% (16,785,408B) in 2 places, all below massif's threshold (1.00%)
+|                 
+->10.04% (117,964,800B) 0x4028FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->08.93% (104,857,600B) 0x4012F1: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->01.12% (13,107,200B) 0x400CF0: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->04.46% (52,428,800B) 0x404098: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->04.46% (52,428,800B) 0x40389D: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   ->04.46% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     
+->01.20% (14,112,546B) in 911 places, all below massif's threshold (1.00%)
+  
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 33 44,817,131,859    1,174,678,840    1,174,386,466       288,550        3,824
+ 34 46,751,264,153    1,174,678,928    1,174,386,466       288,550        3,912
+ 35 47,911,743,352    1,174,678,968    1,174,386,466       288,550        3,952
+ 36 49,072,222,695    1,174,678,840    1,174,386,466       288,550        3,824
+ 37 50,232,702,622    1,174,678,968    1,174,386,466       288,550        3,952
+ 38 51,780,009,679    1,174,678,928    1,174,386,466       288,550        3,912
+ 39 52,940,489,785    1,174,678,928    1,174,386,466       288,550        3,912
+ 40 54,487,796,462    1,174,678,928    1,174,386,466       288,550        3,912
+ 41 55,648,276,436    1,174,678,928    1,174,386,466       288,550        3,912
+ 42 57,195,583,057    1,174,678,968    1,174,386,466       288,550        3,952
+ 43 58,356,063,238    1,174,678,928    1,174,386,466       288,550        3,912
+ 44 60,290,196,790    1,174,678,800    1,174,386,466       288,550        3,784
+ 45 62,224,330,355    1,174,678,928    1,174,386,466       288,550        3,912
+ 46 63,771,637,021    1,174,678,968    1,174,386,466       288,550        3,952
+ 47 64,932,116,973    1,174,678,968    1,174,386,466       288,550        3,952
+ 48 66,479,423,730    1,174,678,840    1,174,386,466       288,550        3,824
+99.98% (1,174,386,466B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->35.71% (419,430,400B) 0x402AD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x400F67: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->35.71% (419,430,400B) 0x4030BF: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->35.71% (419,430,400B) 0x40136F: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3829)
+| ->12.86% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3925)
+|   ->12.86% (151,019,520B) 0x57E686E: psm3_ips_scbctrl_init.isra.0 (ips_scb.c:93)
+|     ->07.62% (89,530,368B) 0x57DB11A: UnknownInlinedFun (ips_proto_am.c:129)
+|     | ->07.62% (89,530,368B) 0x57DB11A: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->07.62% (89,530,368B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->07.62% (89,530,368B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->07.62% (89,530,368B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->07.62% (89,530,368B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->03.81% (44,765,184B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->03.81% (44,765,184B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->03.81% (44,765,184B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->03.81% (44,765,184B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->03.81% (44,765,184B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->03.81% (44,765,184B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->03.81% (44,765,184B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->03.81% (44,765,184B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->03.81% (44,765,184B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->03.81% (44,765,184B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->03.81% (44,765,184B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->03.81% (44,765,184B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->03.81% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->03.81% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->03.81% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->03.81% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->03.81% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->03.81% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->03.81% (44,703,744B) 0x57DB0E7: UnknownInlinedFun (ips_proto_am.c:119)
+|     | ->03.81% (44,703,744B) 0x57DB0E7: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->03.81% (44,703,744B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->03.81% (44,703,744B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->03.81% (44,703,744B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->03.81% (44,703,744B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->01.90% (22,351,872B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->01.90% (22,351,872B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->01.90% (22,351,872B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->01.90% (22,351,872B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->01.90% (22,351,872B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->01.90% (22,351,872B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->01.90% (22,351,872B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->01.90% (22,351,872B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->01.90% (22,351,872B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->01.90% (22,351,872B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->01.90% (22,351,872B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->01.90% (22,351,872B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->01.90% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->01.90% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->01.90% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->01.90% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->01.90% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->01.90% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->01.43% (16,785,408B) 0x57DB009: psm3_ips_proto_init (ips_proto.c:405)
+|       ->01.43% (16,785,408B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|         ->01.43% (16,785,408B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|           ->01.43% (16,785,408B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|             ->01.43% (16,785,408B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|               ->01.43% (16,785,408B) in 2 places, all below massif's threshold (1.00%)
+|                 
+->10.04% (117,964,800B) 0x4028FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->08.93% (104,857,600B) 0x4012F1: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->01.12% (13,107,200B) 0x400CF0: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->04.46% (52,428,800B) 0x404098: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->04.46% (52,428,800B) 0x40389D: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   ->04.46% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     
+->01.20% (14,112,546B) in 911 places, all below massif's threshold (1.00%)
+  
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 49 68,011,963,419    2,013,547,296    2,013,247,070       296,578        3,648
+99.99% (2,013,247,070B) (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+->62.49% (1,258,291,200B) 0x402AD2: std::vector<int, std::allocator<int> >::vector(unsigned long, std::allocator<int> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->20.83% (419,430,400B) 0x400F67: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->20.83% (419,430,400B) 0x4013AB: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->20.83% (419,430,400B) 0x4013C1: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->20.83% (419,430,400B) 0x4030BF: merge_k_sorted_lists(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->20.83% (419,430,400B) 0x40136F: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   
+->07.50% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3829)
+| ->07.50% (151,019,520B) 0x57E686E: UnknownInlinedFun (psm_utils.c:3925)
+|   ->07.50% (151,019,520B) 0x57E686E: psm3_ips_scbctrl_init.isra.0 (ips_scb.c:93)
+|     ->04.45% (89,530,368B) 0x57DB11A: UnknownInlinedFun (ips_proto_am.c:129)
+|     | ->04.45% (89,530,368B) 0x57DB11A: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->04.45% (89,530,368B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->04.45% (89,530,368B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->04.45% (89,530,368B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->04.45% (89,530,368B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->02.22% (44,765,184B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->02.22% (44,765,184B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->02.22% (44,765,184B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->02.22% (44,765,184B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->02.22% (44,765,184B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->02.22% (44,765,184B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->02.22% (44,765,184B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->02.22% (44,765,184B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->02.22% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->02.22% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->02.22% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->02.22% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->02.22% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->02.22% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->02.22% (44,765,184B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->02.22% (44,765,184B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->02.22% (44,765,184B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->02.22% (44,765,184B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->02.22% (44,765,184B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->02.22% (44,765,184B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->02.22% (44,765,184B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->02.22% (44,765,184B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->02.22% (44,765,184B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->02.22% (44,765,184B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->02.22% (44,765,184B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->02.22% (44,765,184B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->02.22% (44,703,744B) 0x57DB0E7: UnknownInlinedFun (ips_proto_am.c:119)
+|     | ->02.22% (44,703,744B) 0x57DB0E7: psm3_ips_proto_init (ips_proto.c:471)
+|     |   ->02.22% (44,703,744B) 0x57E5D2E: ips_ptl_init.lto_priv.0 (ptl.c:243)
+|     |     ->02.22% (44,703,744B) 0x57B0DCB: psm3_ep_open_internal (psm_ep.c:761)
+|     |       ->02.22% (44,703,744B) 0x57B350A: psm3_ep_open (psm_ep.c:880)
+|     |         ->02.22% (44,703,744B) 0x578C2DF: psmx3_trx_ctxt_alloc.isra.0 (psmx3_trx_ctxt.c:317)
+|     |           ->01.11% (22,351,872B) 0x577AD2F: psmx3_sep_open (psmx3_ep.c:1036)
+|     |           | ->01.11% (22,351,872B) 0x53670FA: UnknownInlinedFun (fi_endpoint.h:206)
+|     |           |   ->01.11% (22,351,872B) 0x53670FA: UnknownInlinedFun (btl_ofi_component.c:590)
+|     |           |     ->01.11% (22,351,872B) 0x53670FA: mca_btl_ofi_component_init.lto_priv.0 (btl_ofi_component.c:444)
+|     |           |       ->01.11% (22,351,872B) 0x53378F6: mca_btl_base_select (btl_base_select.c:108)
+|     |           |         ->01.11% (22,351,872B) 0x490C24B: mca_bml_r2_component_init (bml_r2_component.c:88)
+|     |           |           ->01.11% (22,351,872B) 0x4906A30: mca_bml_base_init (bml_base_init.c:74)
+|     |           |             ->01.11% (22,351,872B) 0x4A55776: mca_pml_ob1_component_init.lto_priv.0 (pml_ob1_component.c:304)
+|     |           |               ->01.11% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |           |                 ->01.11% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |           |                   ->01.11% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |           |                     ->01.11% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |           |                       ->01.11% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |           |                         ->01.11% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |           |                           
+|     |           ->01.11% (22,351,872B) 0x577B4DC: psmx3_ep_open (psmx3_ep.c:662)
+|     |             ->01.11% (22,351,872B) 0x49DBC00: UnknownInlinedFun (fi_endpoint.h:187)
+|     |               ->01.11% (22,351,872B) 0x49DBC00: UnknownInlinedFun (mtl_ofi_component.c:508)
+|     |                 ->01.11% (22,351,872B) 0x49DBC00: ompi_mtl_ofi_component_init.lto_priv.0 (mtl_ofi_component.c:1079)
+|     |                   ->01.11% (22,351,872B) 0x49D3A79: ompi_mtl_base_select (mtl_base_frame.c:78)
+|     |                     ->01.11% (22,351,872B) 0x4A73C4D: mca_pml_cm_component_init.lto_priv.0 (pml_cm_component.c:135)
+|     |                       ->01.11% (22,351,872B) 0x4A50C22: mca_pml_base_select (pml_base_select.c:127)
+|     |                         ->01.11% (22,351,872B) 0x489AE04: ompi_mpi_instance_init_common (instance.c:534)
+|     |                           ->01.11% (22,351,872B) 0x489BD77: ompi_mpi_instance_init (instance.c:840)
+|     |                             ->01.11% (22,351,872B) 0x488D74F: ompi_mpi_init (ompi_mpi_init.c:359)
+|     |                               ->01.11% (22,351,872B) 0x48D06F9: PMPI_Init (init.c:67)
+|     |                                 ->01.11% (22,351,872B) 0x400B53: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     |                                   
+|     ->00.83% (16,785,408B) in 1+ places, all below ms_print's threshold (01.00%)
+|     
+->05.86% (117,964,800B) 0x4028FF: std::vector<unsigned char, std::allocator<unsigned char> >::vector(unsigned long, std::allocator<unsigned char> const&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->05.21% (104,857,600B) 0x4012F1: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| | 
+| ->00.65% (13,107,200B) in 1+ places, all below ms_print's threshold (01.00%)
+| 
+->02.60% (52,428,800B) 0x404098: std::vector<int, std::allocator<int> >::_M_default_append(unsigned long) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+| ->02.60% (52,428,800B) 0x40389D: build_suffix_array_subset(std::vector<unsigned char, std::allocator<unsigned char> > const&, std::vector<int, std::allocator<int> >&) (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|   ->02.60% (52,428,800B) 0x400E27: main (in /Manber-Myers-Parallelization/cmake-build-release/hpc_mpi)
+|     
+->00.70% (14,112,350B) in 1+ places, all below ms_print's threshold (01.00%)
+
+--------------------------------------------------------------------------------
+  n        time(i)         total(B)   useful-heap(B) extra-heap(B)    stacks(B)
+--------------------------------------------------------------------------------
+ 50 73,068,062,522    2,013,547,208    2,013,247,070       296,578        3,560
+ 51 73,985,753,869      650,140,768      649,857,666       278,326        4,776
