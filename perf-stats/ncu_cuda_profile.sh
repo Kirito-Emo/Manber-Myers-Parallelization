@@ -5,7 +5,7 @@ set -euo pipefail
 
 # CONFIGURATION
 BIN=../cmake-build-release/hpc_cuda             # Path to compiled CUDA binary
-MB=100                                          # Input file size in MB
+MB=${1:-500}                                    # Input file size in MB (default: 500)
 INPUT="../random_strings/string_${MB}MB.bin"    # Input binary string
 OUTPUT_DIR="cuda_profiles"
 PROFILE_NAME="cuda_${MB}MB_profile"
@@ -23,9 +23,7 @@ if [[ ! -f "$INPUT" ]]; then
 fi
 
 # Create output directory if it doesn't exist
-if [[ ! -d "$OUTPUT_DIR" ]]; then
-  mkdir -p "$OUTPUT_DIR"
-fi
+mkdir -p "$OUTPUT_DIR"
 
 # Run NVIDIA Nsight Compute (ncu) with full profiling
 echo "Profiling ${MB}MB using NVIDIA Nsight Compute..."
@@ -34,6 +32,7 @@ echo "Profiling ${MB}MB using NVIDIA Nsight Compute..."
     --target-processes all \
     --launch-skip 0 \
     --launch-count 1 \
+    --force-overwrite \
     --csv \
     --export "${OUTPUT_DIR}/${PROFILE_NAME}.ncu-rep" \
     "$BIN" "$MB" | tee "${OUTPUT_DIR}/${PROFILE_NAME}.txt"

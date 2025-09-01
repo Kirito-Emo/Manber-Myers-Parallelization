@@ -66,10 +66,11 @@ void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<in
                           const std::vector<int> &counts, std::vector<int> &sa_out)
 {
     const int P = static_cast<int>(counts.size());
-    std::vector<int> displs(P + 1, 0);
 
-    for (int r = 0; r < P; ++r)
-        displs[r + 1] = displs[r] + counts[r];
+    // Compute starting offsets for each chunk
+    std::vector<size_t> chunk_offsets(P, 0);
+    for (int r = 1; r < P; ++r)
+        chunk_offsets[r] = chunk_offsets[r - 1] + counts[r - 1];
 
     struct Item
     {
@@ -88,32 +89,42 @@ void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<in
             while (i < n && j < n && txt[i] == txt[j])
                 ++i, ++j;
             if (i == n)
-                return false; // a is shorter => a < b
+                return false; // a shorter -> a < b
             if (j == n)
-                return true; // b is shorter => a > b
-
-            return txt[i] > txt[j]; // min-heap
+                return true; // b shorter -> a > b
+            return txt[i] > txt[j]; // min-heap -> lexicographic order
         }
     };
 
     sa_out.clear();
-    sa_out.reserve(displs[P]);
+    sa_out.reserve(text.size());
 
     std::vector<int> offs(P, 0);
     std::priority_queue<Item, std::vector<Item>, Cmp> pq(Cmp{text});
 
-    const size_t chunk_len = text.size() / P; // assumption: near-even chunks
+    // Seed heap with first element of each list
     for (int r = 0; r < P; ++r)
+    {
         if (counts[r] > 0)
-            pq.push({static_cast<size_t>(all_sa[displs[r]]) + r * chunk_len, r}), offs[r] = 1;
+        {
+            size_t global_idx = static_cast<size_t>(all_sa[chunk_offsets[r]]) + chunk_offsets[r];
+            pq.push({global_idx, r});
+            offs[r] = 1;
+        }
+    }
 
+    // Multi-way merge
     while (!pq.empty())
     {
         Item cur = pq.top();
         pq.pop();
         sa_out.push_back(static_cast<int>(cur.idx));
-        const int r = cur.which;
+        int r = cur.which;
         if (offs[r] < counts[r])
-            pq.push({static_cast<size_t>(all_sa[displs[r] + offs[r]++]) + r * chunk_len, r});
+        {
+            size_t global_idx = static_cast<size_t>(all_sa[chunk_offsets[r] + offs[r]]) + chunk_offsets[r];
+            pq.push({global_idx, r});
+            offs[r]++;
+        }
     }
 }

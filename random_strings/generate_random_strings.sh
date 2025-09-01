@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 
 # Created by Emanuele (https://github.com/Kirito-Emo)
-# This script generates binary files filled with pseudorandom strings of bytes of specified sizes using /dev/urandom
+# This script generates binary files filled with pseudorandom strings of bytes using /dev/urandom so that
+# STRING + AUXILIARY STRUCTURES ≈ TARGET SIZE in memory.
 
 # Set the directory where the files will be saved
 DIR="random_strings"
+TARGET_SIZES=(1 50 100 200 500)   # Target sizes in MB (total memory budget = string + SA + LCP + aux)
+OVERHEAD=21                       # Overhead factor (memory_total ≈ overhead * string_size)
 
-# 1 MB
-dd if=/dev/urandom of=$DIR/string_1MB.bin bs=1M count=1
+mkdir -p "$DIR"
 
-# 50 MB
-dd if=/dev/urandom of=$DIR/string_50MB.bin bs=1M count=50
+for TGT in "${TARGET_SIZES[@]}"; do
+  # Compute string size in bytes
+  STR_SIZE_BYTES=$(( (TGT * 1024 * 1024) / OVERHEAD ))
+  filename="$DIR/string_${TGT}MB.bin"
 
-# 100 MB
-dd if=/dev/urandom of=$DIR/string_100MB.bin bs=1M count=100
+  echo "Generating $filename with $STR_SIZE_BYTES bytes (target ${TGT}MB total)..."
 
-# 200 MB
-dd if=/dev/urandom of=$DIR/string_200MB.bin bs=1M count=200
+  # Generate exactly STR_SIZE_BYTES random bytes
+  dd if=/dev/urandom of="$filename" bs=1 count="$STR_SIZE_BYTES" status=progress
+done
 
-# 500 MB
-dd if=/dev/urandom of=$DIR/string_500MB.bin bs=1M count=500
+echo "All files generated in '$DIR'."

@@ -214,7 +214,7 @@ The `sequential_measure.sh` script can be run to generate performance statistics
 
 ```sh
 cd perf-stats/
-./sequential_measure.sh
+./seq_measure.sh
 ```
 
 ### OpenMP

@@ -5,23 +5,18 @@ set -euo pipefail
 
 # CONFIGURATION
 BIN=../cmake-build-release/hpc_cuda_ms
-SIZES=(1 50 100 200)
+SIZES=(1 50 100 200 500)
 STREAMS=(2 4 8)
 RUNS=10
 OUTPUT_DIR="cuda_ms_measurements"
 
-if [[ ! -d "$OUTPUT_DIR" ]]; then
-  mkdir -p "$OUTPUT_DIR"
-fi
-
 [[ -f "$BIN" ]] || { echo "Missing binary: $BIN"; exit 1; }
 [[ -d ../random_strings ]] || { echo "Missing ../random_strings dir"; exit 2; }
+mkdir -p "$OUTPUT_DIR"
 
 for mb in "${SIZES[@]}"; do
   [[ -f "../random_strings/string_${mb}MB.bin" ]] || { echo "Missing ../random_strings/string_${mb}MB.bin"; exit 3; }
 done
-
-mkdir -p "$OUTPUT_DIR"
 
 RAW="${OUTPUT_DIR}/cuda_ms_stats.csv"
 SUM="${OUTPUT_DIR}/cuda_ms_summary.csv"
@@ -35,19 +30,19 @@ for mb in "${SIZES[@]}"; do
       out="$("$BIN" "$mb" --streams "$s" 2>/dev/null)" || { echo "Run failed on ${mb}MB streams=$s"; exit 4; }
 
       # Extract times
-      tio=$(echo "$out"   | grep -m1 '^time_io='              | cut -d= -f2 | awk '{print $1}')
-      tall=$(echo "$out"  | grep -m1 '^time_alloc_host_dev='  | cut -d= -f2 | awk '{print $1}')
-      th2d=$(echo "$out"  | grep -m1 '^time_h2d='             | cut -d= -f2 | awk '{print $1}')
-      tkern=$(echo "$out" | grep -m1 '^time_kernel_gpu='      | cut -d= -f2 | awk '{print $1}')
-      tlcp=$(echo "$out"  | grep -m1 '^time_lcp_cpu='         | cut -d= -f2 | awk '{print $1}')
-      td2h=$(echo "$out"  | grep -m1 '^time_d2h='             | cut -d= -f2 | awk '{print $1}')
-      tcmp=$(echo "$out"  | grep -m1 '^time_compute_pure='    | cut -d= -f2 | awk '{print $1}')
-      ttot=$(echo "$out"  | grep -m1 '^time_total_compute='   | cut -d= -f2 | awk '{print $1}')
-      tcom=$(echo "$out"  | grep -m1 '^time_transfers_comm='  | cut -d= -f2 | awk '{print $1}')
-      thpt=$(echo "$out"  | grep -m1 '^throughput='           | cut -d= -f2 | awk '{print $1}')
-      spd=$(echo "$out"   | grep -m1 '^speedup='              | cut -d= -f2 | awk '{print $1}')
-      eff=$(echo "$out"   | grep -m1 '^efficiency='           | sed -E 's/efficiency=//; s/ %//')
-      mo=$(echo "$out"    | grep -m1 '^memory_overhead_ratio='| sed -E 's/memory_overhead_ratio=//; s/ %//')
+      tio=$(echo "$out"   | grep -m1 '^time_io='               | cut -d= -f2 | awk '{print $1}')
+      tall=$(echo "$out"  | grep -m1 '^time_alloc_host_dev='   | cut -d= -f2 | awk '{print $1}')
+      th2d=$(echo "$out"  | grep -m1 '^time_h2d='              | cut -d= -f2 | awk '{print $1}')
+      tkern=$(echo "$out" | grep -m1 '^time_kernel_gpu='       | cut -d= -f2 | awk '{print $1}')
+      tlcp=$(echo "$out"  | grep -m1 '^time_lcp_cpu='          | cut -d= -f2 | awk '{print $1}')
+      td2h=$(echo "$out"  | grep -m1 '^time_d2h='              | cut -d= -f2 | awk '{print $1}')
+      tcmp=$(echo "$out"  | grep -m1 '^time_compute_pure='     | cut -d= -f2 | awk '{print $1}')
+      ttot=$(echo "$out"  | grep -m1 '^time_total_compute='    | cut -d= -f2 | awk '{print $1}')
+      tcom=$(echo "$out"  | grep -m1 '^time_transfers_comm='   | cut -d= -f2 | awk '{print $1}')
+      thpt=$(echo "$out"  | grep -m1 '^throughput='            | cut -d= -f2 | awk '{print $1}')
+      spd=$(echo "$out"   | grep -m1 '^speedup='               | cut -d= -f2 | awk '{print $1}')
+      eff=$(echo "$out"   | grep -m1 '^efficiency='            | sed -E 's/efficiency=//; s/ %//')
+      mo=$(echo "$out"    | grep -m1 '^memory_overhead_ratio=' | sed -E 's/memory_overhead_ratio=//; s/ %//')
 
       # Fallback → NaN
       [[ -z "$tio"      ]] && tio="nan"
@@ -74,37 +69,24 @@ done
 echo "mode,size_mb,streams,avg_time_io_s,avg_time_alloc_host_dev_s,avg_time_h2d_s,avg_time_kernel_gpu_s,avg_time_lcp_cpu_s,avg_time_d2h_s,avg_time_compute_pure_s,avg_time_total_compute_s,avg_time_transfers_comm_s,avg_throughput_MBps,avg_speedup,avg_efficiency_pct,avg_memory_overhead_ratio_pct" > "$SUM"
 
 awk -F, '
-  BEGIN { OFS="," }
   NR>1 {
     key=$2","$3
-    if($5!="nan"){io[key]+=$5; c[key]++}
-    if($6!="nan"){al[key]+=$6}
-    if($7!="nan"){h2d[key]+=$7}
-    if($8!="nan"){ker[key]+=$8}
-    if($9!="nan"){lcp[key]+=$9}
-    if($10!="nan"){d2h[key]+=$10}
-    if($11!="nan"){cmp[key]+=$11}
-    if($12!="nan"){tot[key]+=$12}
-    if($13!="nan"){com[key]+=$13}
-    if($14!="nan"){hpt[key]+=$14}
-    if($15!="nan"){spd[key]+=$15; cs[key]++}
-    if($16!="nan"){eff[key]+=$16; ce[key]++}
-    if($17!="nan"){mo[key]+=$17}
+    io[key]+=$5; alloc[key]+=$6; h2d[key]+=$7; kern[key]+=$8; lcp[key]+=$9
+    d2h[key]+=$10; comp[key]+=$11; tot[key]+=$12; comm[key]+=$13; thr[key]+=$14
+    spd[key]+=$15; eff[key]+=$16; mem[key]+=$17
+    cnt[key]++
   }
   END {
-    for (k in c) {
-      n=c[k]
-      ns=(cs[k]>0?cs[k]:n)
-      ne=(ce[k]>0?ce[k]:n)
+    for (k in cnt) {
       split(k,a,",")
-      printf "cuda_ms,%s,%s,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.2f,%.2f\n",
-             a[1], a[2],
-             (io[k]/n), (al[k]/n), (h2d[k]/n), (ker[k]/n), (lcp[k]/n), (d2h[k]/n),
-             (cmp[k]/n), (tot[k]/n), (com[k]/n), (hpt[k]/n),
-             (ns>0 ? spd[k]/ns : 0), (ne>0 ? eff[k]/ne : 0), (mo[k]/n)
+      printf "cuda_ms,%s,%s,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
+        a[1], a[2],
+        io[k]/cnt[k], alloc[k]/cnt[k], h2d[k]/cnt[k], kern[k]/cnt[k], lcp[k]/cnt[k],
+        d2h[k]/cnt[k], comp[k]/cnt[k], tot[k]/cnt[k], comm[k]/cnt[k], thr[k]/cnt[k],
+        spd[k]/cnt[k], eff[k]/cnt[k], mem[k]/cnt[k]
     }
   }
-' "$RAW" | sort -t, -k2n -k3n >> "$SUM"
+' "$RAW" | sort -t, -k2,2n -k3,3n >> "$SUM"
 
 echo "Finished CUDA Multi-Stream benchmark"
 echo " - Raw:     $RAW"

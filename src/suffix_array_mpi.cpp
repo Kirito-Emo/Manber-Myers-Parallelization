@@ -54,15 +54,16 @@ void build_suffix_array_subset(const std::vector<uint8_t> &chunk, std::vector<in
         sa_out[i] = bucket[i].second;
 }
 
-// Merges suffix arrays of all chunks into a global suffix array
+// Merges suffix arrays from all chunks into a global suffix array
 void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<int> &all_sa,
                           const std::vector<int> &counts, std::vector<int> &sa_out)
 {
     int P = counts.size();
-    std::vector<int> displs(P + 1, 0);
 
-    for (int r = 0; r < P; ++r)
-        displs[r + 1] = displs[r] + counts[r];
+    // Compute starting offsets (in characters) for each chunk
+    std::vector<size_t> chunk_offsets(P, 0);
+    for (int r = 1; r < P; ++r)
+        chunk_offsets[r] = chunk_offsets[r - 1] + counts[r - 1];
 
     struct Item
     {
@@ -82,28 +83,35 @@ void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<in
             // Compare suffix a.idx vs b.idx
             while (i < n && j < n && txt[i] == txt[j])
                 ++i, ++j;
+
             if (i == n)
-                return false; // shorter suffix a < b
+                return false; // suffix a ends -> a < b
 
             if (j == n)
-                return true; // b shorter => a > b
+                return true; // suffix b ends -> a > b
 
-            return txt[i] > txt[j]; // for min-heap
+            return txt[i] > txt[j]; // min-heap by lexicographic order
         }
     };
 
     sa_out.clear();
-    sa_out.reserve(displs[P]);
+    sa_out.reserve(text.size());
 
     std::vector<int> offs(P, 0);
     std::priority_queue<Item, std::vector<Item>, Cmp> pq(Cmp{text});
 
-    // Seed heap with first element of each list
+    // Initialize heap with first suffix of each chunk
     for (int r = 0; r < P; ++r)
+    {
         if (counts[r] > 0)
-            pq.push({all_sa[displs[r]] + r * (text.size() / P), r}), offs[r] = 1;
+        {
+            size_t global_idx = all_sa[offs[r] + chunk_offsets[r]] + chunk_offsets[r];
+            pq.push({global_idx, r});
+            offs[r] = 1;
+        }
+    }
 
-    // Merge
+    // Multi-way merge
     while (!pq.empty())
     {
         Item cur = pq.top();
@@ -112,6 +120,10 @@ void merge_k_sorted_lists(const std::vector<uint8_t> &text, const std::vector<in
         int r = cur.which;
 
         if (offs[r] < counts[r])
-            pq.push({all_sa[displs[r] + offs[r]++] + r * (text.size() / P), r});
+        {
+            size_t global_idx = all_sa[chunk_offsets[r] + offs[r]] + chunk_offsets[r];
+            pq.push({global_idx, r});
+            offs[r]++;
+        }
     }
 }

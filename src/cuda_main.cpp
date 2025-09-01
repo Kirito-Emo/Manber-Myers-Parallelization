@@ -63,24 +63,24 @@ static double load_seq_baseline_for_mb_arg(const std::string &arg)
 
     std::string line;
     if (!std::getline(fin, line))
-        return -1.0;
+        return -1.0; // skip header
 
     const std::string key = std::to_string(mb) + "MB";
     while (std::getline(fin, line))
     {
         std::stringstream ss(line);
-        std::string size, avg;
-        if (!std::getline(ss, size, ','))
-            continue;
+        std::string token;
+        std::vector<std::string> cols;
 
-        if (!std::getline(ss, avg, ','))
-            continue;
+        // Split by comma
+        while (std::getline(ss, token, ','))
+            cols.push_back(token);
 
-        if (size == key)
+        if (cols.size() > 6 && cols[0] == key)
         {
             try
             {
-                return std::stod(avg);
+                return std::stod(cols[6]);
             }
             catch (...)
             {
