@@ -1,0 +1,99 @@
+\documentclass[a4paper, oneside]{book}
+\usepackage{inputenc}
+\usepackage[margin=3cm, bindingoffset=1cm]{geometry}
+\linespread{1.5}
+\usepackage{float}
+\usepackage{csquotes}
+\usepackage{subfig}
+\usepackage{graphicx}
+\usepackage{indentfirst}
+\usepackage{fancyhdr}
+\usepackage{array}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parindent}{0cm}
+\usepackage[Conny]{fncychap}
+\usepackage{tcolorbox}
+\usepackage{multicol}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[inkscapelatex=false]{svg}
+
+\pagestyle{fancy}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ \uppercase{#1}}{}}
+\fancyhf{}
+\fancyhead[C]{\textbf{\leftmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{1pt}
+
+\title{High Performance Computing (HPC)}
+\author{Emanuele Relmi}
+
+\renewcommand{\contentsname}{\textbf{Indice}}
+\renewcommand{\chaptername}{Capitolo}
+
+\begin{document}
+	%Frontespizio
+	\begin{titlepage}
+		\begin{center}
+			\LARGE{\uppercase{\textbf{Università degli Studi di Salerno}}}\\
+			\vspace{5mm}
+			%Dipartimento
+			\uppercase{\normalsize \textbf{Dipartimento di Ingegneria dell'Informazione ed Elettrica e Matematica Applicata} }\\
+		\end{center}
+		
+		\begin{figure}[H]
+			\centering
+			\includegraphics[width=0.35\textwidth]{img/unisa.png}
+		\end{figure}
+		
+		\begin{center}
+			%Corso di Laurea
+			\normalsize{Corso di Laurea Magistrale in Ingegneria Informatica}\\
+			\vspace{20mm}
+			%Titolo
+			{\LARGE{\textbf{High Performance Computing (HPC)}}}\\
+			\vspace{3mm}
+			{\LARGE{\textbf{Report}}}
+			\vspace{3mm}
+		\end{center}
+		
+		\vspace{15mm}
+		
+		\begin{center}
+			\begin{tabular}{ | c | c | c | c |}
+				\hline
+				\textbf{Nome} & \textbf{Cognome} & \textbf{Matricola} & \textbf{E-Mail}           \\ \hline
+				Emanuele          & Relmi            & 0622702368         & e.relmi@studenti.unisa.it \\
+				\hline
+			\end{tabular}
+		\end{center}
+		
+		\vspace{30mm}
+		
+		%Anno Accademico
+		\centering{\large \uppercase{Anno Accademico 2024/2025}}
+	
+	\end{titlepage}
+	
+	%Corpo della Tesi
+	\tableofcontents
+	\clearpage
+	\sloppy
+	\hyphenpenalty=10000
+	\exhyphenpenalty=10000
+	
+	\input{sections/wp1}
+	\input{sections/wp2}
+	\input{sections/wp3}
+	\input{sections/wp4}
+	\input{sections/wp5}
+	\input{sections/wp6}
+
+    \listoftables
+    \listoffigures
+
+\end{document}

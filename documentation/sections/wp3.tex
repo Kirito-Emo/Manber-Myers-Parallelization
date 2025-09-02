@@ -1,0 +1,111 @@
+\chapter{WP3 - Parallelizzazione con MPI}
+	
+	Questo work package introduce la parallelizzazione distribuita tramite \textbf{MPI}, con decomposizione a blocchi (\textit{chunks}) del testo d'ingresso.
+	Ogni processo costruisce il suffix array (\emph{SA}) del proprio \emph{chunk} locale; successivamente il rank~0 esegue un \emph{$k$-way merge} delle liste ordinate per ottenere il \emph{SA globale}, calcola l'\emph{LCP} e ricava la \emph{LRS}. \\
+	La costruzione locale usa il \emph{doubling} con ordinamento per coppie tramite \texttt{std::sort} (quindi complessità $O(n_r \log^2 n_r)$), mentre il merge finale è basato su un heap con confronto lessicografico diretto sui suffissi del testo completo.
+	
+	\section{Struttura del codice}
+		\begin{itemize}
+			\item \texttt{suffix\_array\_mpi.h}: dichiarazione delle funzioni di costruzione del SA locale e di merge globale.
+			\item \texttt{suffix\_array\_mpi.cpp}: implementazione della costruzione locale (\texttt{build\_suffix\_array\_subset}) e del $k$-way merge (\texttt{merge\_k\_sorted\_lists}).
+			\item \texttt{mpi\_main.cpp}: orchestrazione MPI (I/O distribuito con \texttt{MPI\_IO}, raccolta risultati, merge su rank~0, calcolo LCP e LRS), reporting delle metriche e confronto con la baseline sequenziale.
+		\end{itemize}
+	
+	\section{Distribuzione dei dati e I/O}
+		Il testo di dimensione $n$ byte è suddiviso in $P$ chunk (uno per processo), con dimensioni quasi uniformi:
+		$$
+		\texttt{chunk\_size} = \left\lceil \frac{n}{P} \right\rceil, \quad
+		\texttt{start}\_r = r \cdot \texttt{chunk\_size}, \quad
+		\texttt{actual\_chunk}\_r = \min(\texttt{chunk\_size},\, n - \texttt{start}\_r)
+		$$
+		
+		Ogni rank legge il \emph{proprio} segmento mediante I/O collettivo:
+		\[
+			\texttt{MPI\_File\_read\_at\_all(file, start}_r,\, \texttt{chunk}_r,\, \dots)
+		\]
+		
+		Il parametro \texttt{mb} (dimensione del dataset) è validato dal rank~0 e diffuso a tutti con \texttt{MPI\_Bcast}.
+	
+	\section{Costruzione locale del SA}
+		La costruzione del SA sul chunk locale adotta il paradigma \emph{doubling} con ordinamento per coppie:
+		\begin{enumerate}
+			\item \textbf{Rank iniziali} Si inizializza \texttt{rk[i]} al valore del byte \texttt{chunk[i]}.
+			\item \textbf{Iterazioni di raddoppio} Per $k=1,2,4,\dots$:
+			\begin{enumerate}
+				\item si costruisce un vettore \texttt{bucket} di triple \(((\texttt{rk}[i], \texttt{rk}[i+k]),\, i)\), dove il secondo rango è $-1$ se $i+k \ge n_r$;
+				\item si ordina \texttt{bucket} con \texttt{std::sort} (confronto lessicografico su coppie di interi);
+				\item si riassegnano i ranghi in \texttt{tmp} (ranghi uguali per coppie uguali; incremento su cambio di coppia) e si copia in \texttt{rk};
+				\item se i ranghi sono tutti distinti ($r = n_r-1$) si termina in anticipo (\textit{early stop condition}).
+			\end{enumerate}
+			\item \textbf{Estrazione dell'ordine} Si scrive \texttt{sa\_out[i] = bucket[i].second}.
+		\end{enumerate}
+		
+		\subsection*{Nota sulla complessità}
+			L'uso di \texttt{std::sort} a ogni iterazione implica $O(n_r \log n_r)$ per iterazione e $\Theta(\log n_r)$ iterazioni, per un totale $O(n_r \log^2 n_r)$.
+			Questo differisce dalla baseline sequenziale (bucketed, $O(n \log n)$), ma risulta pratico e auto-contenuto per la fase locale.
+	
+	\section{$k$-way merge globale}
+		Il rank~0 riceve da tutti i \textbf{SA locali} (concatenati in \texttt{all\_sa}) e i \textbf{conteggi} \texttt{counts[r]} (lunghezze dei chunk) tramite \texttt{MPI\_Gather/Gatherv}.
+		A questo punto esegue un $k$-way merge con min-heap:
+		\begin{itemize}
+			\item si prepara un heap di elementi \texttt{Item\{idx, which\}}, dove \texttt{idx} è l'\textbf{indice globale} del suffisso nel testo completo e \texttt{which} identifica il chunk di provenienza;
+			\item il comparatore confronta direttamente i suffissi \texttt{text[idx]} e \texttt{text[jdx]} byte-per-byte finché divergono o si raggiunge la fine del testo;
+			\item a ogni estrazione si inserisce il successivo suffisso dalla stessa lista locale, finché si esauriscono tutti i suffissi.
+		\end{itemize}
+		
+		\subsection*{Costo computazionale del merge}
+			Con $P$ liste e $n$ suffissi totali, il merge ha costo $O(n \log P)$ per confronto dell'heap.
+			Poiché il comparatore effettua un confronto lessicografico diretto sui suffissi, il costo effettivo è $O(L)$ caratteri per confronto, dove $L$ è la lunghezza del prefisso comune atteso.
+	
+	\section{Calcolo LCP e LRS}
+		Una volta ottenuto \texttt{sa\_global}, il rank~0:
+		\begin{enumerate}
+			\item rilegge il testo \emph{completo} in memoria;
+			\item calcola l'array \texttt{lcp} tramite \texttt{build\_lcp(\dots)} (algoritmo di Kasai, tempo $O(n)$);
+			\item esegue una scansione lineare per determinare la \textit{Longest Repeated Substring} come $\max_k \texttt{lcp}[k]$, registrando anche la posizione in \texttt{sa\_global}.
+		\end{enumerate}
+		
+		Queste fasi sono locali al rank~0 e non comportano ulteriori comunicazioni.
+	
+	\section{Comunicazione e orchestrazione}
+		\begin{itemize}
+			\item \textbf{Broadcast parametri:} \texttt{MPI\_Bcast} per disporre \texttt{mb} su tutti i rank.
+			\item \textbf{I/O distribuito:} \texttt{MPI\_File\_read\_at\_all} per leggere ciascun chunk dal file condiviso.
+			\item \textbf{Raccolta SA locali:} \texttt{MPI\_Gather} (lunghezze) + \texttt{MPI\_Gatherv} (concatenazione degli SA) verso rank~0.
+			\item \textbf{Barrier di misura:} \texttt{MPI\_Barrier} prima delle sezioni temporizzate (SA locale, comunicazione, merge).
+			\item \textbf{Metriche per-rank:} raccolta di tempi locali (\texttt{time\_sa\_local}, \texttt{time\_comm\_local}, \texttt{time\_io}, \texttt{time\_alloc}) e stampa su rank~0.
+		\end{itemize}
+		
+		Le metriche aggregate usate per il report globale sono:
+		$$
+		\texttt{time\_compute\_pure} = \max\_r \texttt{time\_sa\_local}^{(r)} \;+\; \texttt{time\_merge} \;+\; \texttt{time\_lcp}
+		$$
+		escludendo I/O e comunicazioni.
+		La \texttt{throughput} (MB/s) è calcolata su \texttt{time\_compute\_pure}; lo \texttt{speedup} rispetto alla baseline sequenziale è basato sui tempi medi presi dal file \textit{CSV} \texttt{seq\_summary} caricato da rank~0.
+	
+	\section{Analisi di complessità e scalabilità}
+		\begin{itemize}
+			\item \textbf{Costruzione locale (per rank)} $O(n_r \log^2 n_r)$ con \texttt{std::sort} su coppie a ogni iterazione di doubling; $n_r \approx \lceil n/P \rceil$.
+			\item \textbf{Merge globale} $O(n \log P \cdot \overline{L})$, dove $\overline{L}$ è la lunghezza media del prefisso comune esaminata dal comparatore.
+			\item \textbf{LCP (Kasai)} $O(n)$ su rank~0.
+			\item \textbf{Scalabilità} Lo speedup è determinato da:
+			\begin{enumerate}
+				\item il fattore $P$ nella fase locale ($n_r \approx n/P$),
+				\item il costo del merge $O(n \log P)$ sul rank~0,
+				\item l'eventuale sbilanciamento dei chunk (ultimo rank più corto) e la saturazione di banda del filesystem in \texttt{MPI-IO}.
+			\end{enumerate}
+			
+			In pratica, al crescere di $P$ il merge e l'LCP sul rank~0 diventano il collo di bottiglia dominante.
+		\end{itemize}
+	
+	\section{Validazione}
+		La correttezza del SA globale è verificata confrontando l'ordinamento lessicografico dei suffissi in \texttt{sa\_global} rispetto al testo completo.
+		L'LCP è validato verificando che, per $k>0$, valga $\texttt{lcp}[k] = \mathrm{lcp}(S[\texttt{sa\_global}[k]], S[\texttt{sa\_global}[k-1]])$. \\
+		La LRS è infine $\max_k \texttt{lcp}[k]$, con posizione corrispondente in \texttt{sa\_global}.
+	
+	\section{Limiti e possibili estensioni}
+		\begin{itemize}
+			\item \textbf{Merge più efficiente} Evitare i confronti byte-per-byte usando ranghi globali a finestra (ad es.\ coppie $(\mathrm{rk}[i], \mathrm{rk}[i+h])$ condivise) o strategie di \emph{string sample sort} / \emph{radix-based} per ridurre $\overline{L}$.
+			\item \textbf{Costruzione locale $O(n_r \log n_r)$} Sostituire \texttt{std::sort} con ordinamenti \emph{radix} sulle coppie di ranghi per recuperare la complessità teorica del doubling $O(n \log n)$.
+			\item \textbf{Parallelizzazione LCP} Possibile parallelizzare parzialmente Kasai su segmenti con correzioni agli overlap, oppure calcolare LCP \emph{on-the-fly} durante il merge con mantenimento di uno stato di confronto.
+		\end{itemize}

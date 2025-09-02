@@ -1,0 +1,136 @@
+\chapter{WP4 - Parallelizzazione ibrida MPI + OpenMP}
+	
+	Questo work package adotta un modello \textit{ibrido} che combina parallelismo distribuito (\textbf{MPI}) e parallelismo a memoria condivisa (\textbf{OpenMP}).
+	Ogni rank MPI costruisce il suffix array (\emph{SA}) del proprio \emph{chunk} sfruttando OpenMP all'interno del nodo; il rank~0 esegue poi il \emph{$k$-way merge} dei SA locali, calcola l'\emph{LCP} e ricava la \emph{LRS}.
+	L'obiettivo è ridurre i tempi rispetto a MPI puro, accelerando la costruzione locale con i thread OpenMP\@.
+	
+	\section{Struttura del codice}
+		\begin{itemize}
+			\item \texttt{suffix\_array\_mpi\_omp.cpp}: implementazione ibrida della costruzione locale del SA (\texttt{build\_suffix\_array\_subset}, con OpenMP) e del $k$-way merge (\texttt{merge\_k\_sorted\_lists}).
+			\item \texttt{mpi\_omp\_main.cpp}: orchestrazione MPI, I/O distribuito, raccolta degli SA locali, merge su rank~0, calcolo LCP e LRS, raccolta delle metriche e confronto con baseline.
+		\end{itemize}
+	
+	\section{Distribuzione dei dati e I/O}
+		La partizione del testo da $n$ byte è identica alla versione MPI pura:
+		\[
+			\texttt{chunk\_size} = \left\lceil \frac{n}{P} \right\rceil,\quad
+			\texttt{start}_r = r \cdot \texttt{chunk\_size},\quad
+			\texttt{actual\_chunk}_r = \min(\texttt{chunk\_size}, n - \texttt{start}_r),
+		\]
+		con lettura parallela tramite \texttt{MPI\_File\_read\_at\_all} del segmento locale \texttt{chunk}.
+		Il parametro \texttt{mb} è validato su rank~0 e diffuso con \texttt{MPI\_Bcast}.
+		Ogni rank registra anche \texttt{omp\_get\_max\_threads()} per tracciare i thread OpenMP utilizzabili localmente. \\
+		Inoltre, il numero di thread per rank è controllabile tramite il parametro \texttt{OMP\_NUM\_THREADS}.
+	
+	\section{Costruzione locale del SA con OpenMP}
+		La funzione \texttt{build\_suffix\_array\_subset(chunk, sa\_out)} adotta il \emph{doubling} con ordinamento per coppie (\texttt{rk}[i], \ \texttt{rk}[i+k]), introducendo OpenMP dove le iterazioni sono indipendenti:
+		\begin{enumerate}
+			\item \textbf{Inizializzazione dei ranghi}
+			\begin{itemize}
+				\item \emph{Parallelizzato:} \texttt{\#pragma omp parallel for} su \(\texttt{rk}[i] \leftarrow \texttt{chunk}[i]\).
+			\end{itemize}
+			
+			\item \textbf{Iterazioni di raddoppio} per \(k = 1, 2, 4,\ \dots\):
+			\begin{enumerate}
+				\item \textbf{Riempimento delle coppie (bucket)}
+				\begin{itemize}
+					\item \emph{Parallelizzato:} \texttt{\#pragma omp parallel for} su \(\texttt{bucket}[i] \leftarrow ((\texttt{rk}[i],\ \texttt{rk}[i+k]\ \lor \ -1),\ i)\).
+				\end{itemize}
+				
+				\item \textbf{Ordinamento per coppie}
+				\begin{itemize}
+					\item \emph{Sequenziale}: \texttt{std::sort(bucket.begin(), bucket.end())} per avere determinismo e semplicità.
+				\end{itemize}
+				
+				\item \textbf{Riassegnazione dei ranghi}
+				\begin{itemize}
+					\item \emph{Sequenziale}: scansione di \texttt{bucket} per assegnare nuovi ranghi in \texttt{tmp} (\(r\) incrementa quando la coppia cambia).
+				\end{itemize}
+				
+				\item \textbf{Scrittura dei ranghi}
+				\begin{itemize}
+					\item \emph{Parallelizzato}: \texttt{\#pragma omp parallel for} su \(\texttt{rk}[i] \leftarrow \texttt{tmp}[i]\).
+				\end{itemize}
+				
+				\item \textbf{Early stopping}
+				\begin{itemize}
+					\item Se \(r = n_r-1\) (tutti i ranghi distinti) si esce dal ciclo.
+				\end{itemize}
+			\end{enumerate}
+			
+			\item \textbf{Estrazione dell'ordine finale}
+			\begin{itemize}
+				\item \emph{Parallelizzato}: \texttt{\#pragma omp parallel for} su \(\texttt{sa\_out}[i] \leftarrow \texttt{bucket}[i].\texttt{second}\).
+			\end{itemize}
+		\end{enumerate}
+		
+		\subsection*{Note implementative su default OpenMP}
+			Non sono usate clausole esplicite \texttt{private}/\texttt{shared}.
+			Si sfruttano i \emph{default OpenMP}:
+			\begin{itemize}
+				\item le variabili di loop sono \emph{private};
+				\item i vettori allocati all'esterno (\texttt{rk}, \texttt{tmp}, \texttt{bucket}, \texttt{sa\_out}) sono \emph{shared};
+				\item le scritture avvengono in posizioni disgiunte.
+			\end{itemize}
+			
+			Le due sezioni lasciate sequenziali (\texttt{sort} e riassegnazione ranghi) hanno dipendenze dati intrinseche.
+		
+		\subsection*{Complessità locale}
+			Come nella versione~MPI pura, l'uso di \texttt{std::sort} per ogni \(k\) comporta \(O(n_r \log n_r)\) per iterazione e \(\Theta(\log n_r)\) iterazioni: \(O(n_r \log^2 n_r)\).
+			L’accelerazione rispetto a MPI puro deriva dal parallelismo delle fasi di riempimento coppie, scrittura ranghi ed estrazione finale.
+	
+	\section{$k$-way merge globale}
+		Il rank~0 raccoglie \textbf{gli SA locali} con \texttt{MPI\_Gather}/\texttt{Gatherv} e li fonde con un min-heap (\texttt{std::priority\_queue}) che confronta lessicograficamente i suffissi del \emph{testo completo}:
+		\begin{itemize}
+			\item \texttt{Item\{idx, which\}} incapsula l'indice \emph{globale} nel testo e il chunk di provenienza.
+			\item Il comparatore \texttt{Cmp} confronta i suffissi \texttt{text[idx]} e \texttt{text[jdx]} avanzando su byte uguali e fermandosi alla prima divergenza o a fine testo.
+			\item Dopo ogni estrazione, si inserisce dall'elenco \emph{which} il successivo suffisso (indice globale aggiornato).
+		\end{itemize}
+		
+		\subsection*{Costo del merge}
+			Con $P$ liste e $n$ elementi, \(O(n \log P)\) operazioni heap; ogni confronto costa \(O(L)\) caratteri dove \(L\) è il prefisso comune medio.
+	
+	\section{Calcolo LCP e LRS}
+		A merge concluso, il rank~0:
+		\begin{enumerate}
+			\item carica il testo \emph{completo} in memoria;
+			\item calcola \texttt{lcp} con \textbf{Kasai} (\(O(n)\));
+			\item scansiona \texttt{lcp} per ottenere la \emph{LRS} come \(\max_k \texttt{lcp}[k]\), registrando la posizione in \texttt{sa\_global}.
+		\end{enumerate}
+	
+	\section{Orchestrazione, misure e report}
+		\begin{itemize}
+			\item \textbf{Broadcast parametri:} \texttt{MPI\_Bcast} per disporre \texttt{mb} su tutti i rank.
+			\item \textbf{I/O distribuito:} \texttt{MPI\_File\_read\_at\_all} per leggere ciascun chunk dal file condiviso.
+			\item \textbf{Raccolta SA locali:} \texttt{MPI\_Gather} (lunghezze) + \texttt{MPI\_Gatherv} (concatenazione degli SA) verso rank~0.
+			\item \textbf{Barrier di misura:} \texttt{MPI\_Barrier} prima delle sezioni temporizzate (SA locale, comunicazione, merge) misurate con \texttt{MPI\_Wtime()}.
+			\item \textbf{Raccolta metriche:} per ciascun rank si raccolgono \texttt{time\_sa\_local}, \texttt{time\_comm\_local}, \texttt{time\_io}, \texttt{time\_alloc} e \texttt{omp\_threads}.
+			\item \textbf{Aggregati globali (rank 0):} si considera il massimo per-rank come collo di bottiglia distribuito:
+			\[
+				\texttt{time\_compute\_pure} = \max_r \texttt{time\_sa\_local}^{(r)} + \texttt{time\_merge} + \texttt{time\_lcp}.
+			\]
+			
+			Si riportano inoltre \texttt{time\_total\_compute}, \texttt{throughput} in MB/s, \texttt{time\_transfers\_comm}, \texttt{memory\_overhead\_ratio} e \texttt{speedup} ed \texttt{efficiency} rispetto alla baseline sequenziale.
+		\end{itemize}
+	
+	\section{Analisi di complessità e scalabilità}
+		\begin{itemize}
+			\item \textbf{Locale per rank (OpenMP)} \(\;O(n_r \log^2 n_r)\) per la costruzione (\texttt{std::sort} per iterazione), con accelerazione data dai \texttt{for} parallelizzati.
+			\item \textbf{Merge globale} \(\;O(n \log P \cdot \overline{L})\) su rank~0, dove \(\overline{L}\) è il prefisso comune medio.
+			\item \textbf{LCP} \(\;O(n)\) su rank~0.
+			\item \textbf{Scalabilità} La fase locale beneficia di \(p\) thread per rank; all’aumentare di \(P\), il merge e l’LCP su rank~0 tendono a dominare. La banda di memoria locale limita lo speedup OpenMP; la banda del filesystem e del network limita lo scaling MPI\@.
+		\end{itemize}
+	
+	\section{Validazione}
+		Il \emph{SA globale} risultante dal merge viene usato per calcolare \texttt{lcp} (Kasai) e la \textit{LRS}. La correttezza è verificata rispetto alle definizioni:
+		\[
+			S[\texttt{sa\_glob}[i]] \le S[\texttt{sa\_glob}[i+1]],\qquad
+			\texttt{lcp}[k] = \mathrm{lcp}\big(S[\texttt{sa\_glob}[k]], S[\texttt{sa\_glob}[k-1]]\big).
+		\]
+		La LRS è \(\max_k \texttt{lcp}[k]\) con la corrispondente posizione nel SA\@.
+	
+	\section{Limiti e possibili estensioni}
+		\begin{itemize}
+			\item \textbf{Riduzione del costo locale:} rimpiazzare \texttt{std::sort} con \emph{radix} sulle coppie di ranghi per avvicinarsi a \(O(n_r \log n_r)\); preservare il determinismo.
+			\item \textbf{Merge accelerato:} usare ranghi globali a finestra (\(h\)-doubling anche nel merge) o tecniche \emph{string/radix} per abbattere il costo dei confronti byte-per-byte.
+		\end{itemize}

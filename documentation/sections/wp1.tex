@@ -1,0 +1,134 @@
+\chapter{WP1 - Generazione Dataset e Algoritmo Sequenziale}
+	
+	Questo work package è incentrato sulle fasi di preparazione dei dati di input e di implementazione sequenziale per la costruzione dell’array dei suffissi (Suffix Array, SA) e del relativo array delle lunghezze dei prefissi comuni massimi (Longest Common Prefix, LCP).
+	La costruzione del SA è realizzata tramite l’algoritmo di \textbf{Manber-Myers}, la cui complessità è $O(n \log n)$, mentre l’array LCP è calcolato tramite l’algoritmo di \textbf{Kasai} con complessità $O(n)$.
+	Queste componenti costituiscono la baseline funzionale e prestazionale su cui si innestano i successivi work package dedicati alle versioni parallele su CPU (OpenMP, MPI, ibrida OMP+MPI) e GPU (CUDA).
+	
+	\section{Generazione delle stringhe random}
+		La generazione degli input testuali è stata realizzata mediante uno script in \textit{bash}, denominato \texttt{generate\_random\_strings.sh}.
+		Lo scopo dello script è creare file contenenti stringhe casuali di lunghezza predefinita, espressa in megabyte (MB), utilizzando come sorgente \texttt{/dev/urandom}, al fine di fornire dataset sintetici di dimensioni fisse per i benchmark.
+		Il comando impiegato è \texttt{dd}, configurato con blocchi da \SI{1}{B}.
+		
+		\subsection{Output e organizzazione dei dataset}
+			Lo script produce un file binario contenente una stringa casuale di lunghezza opportunamente ridotta rispetto al target nominale, in modo tale che \emph{stringa + strutture ausiliarie (SA, LCP, workspace)} occupino complessivamente circa la memoria desiderata.
+			Sono stati considerati target complessivi pari a 1, 50, 100, 200 e 500 MB, dove per ciascun valore, la dimensione effettiva della stringa è stata calcolata dividendo il budget totale per un fattore di overhead fissato a 21, corrispondente al rapporto tra il testo e le strutture dati necessarie all’algoritmo di Manber-Myers e di Kasai.
+			I file risultanti sono organizzati nella cartella \texttt{random\_strings/} e contengono byte arbitrari nell'intervallo $[0,255]$.
+			Non viene applicata alcuna restrizione sull'alfabeto (non soltanto ASCII stampabile); possono pertanto comparire byte \texttt{NUL} e qualsiasi altro valore, simulando condizioni realistiche di input eterogeneo.
+			
+			\begin{table}[H]
+				\centering
+				\begin{tabular}{|c|c|}
+					\hline
+					\textbf{Target complessivo (MB)} & \textbf{Dimensione stringa effettiva (MB)} \\
+					\hline
+					1                                     & $\approx$ 0.05                             \\
+					50                                    & $\approx$ 2.38                             \\
+					100                                   & $\approx$ 4.77                             \\
+					200                                   & $\approx$ 9.54                             \\
+					500                                   & $\approx$ 23.8                             \\
+					\hline
+				\end{tabular}
+				\caption{Relazione tra target di memoria complessivo e dimensione effettiva della stringa generata.}
+				\label{tab:random_strings_sizes}
+			\end{table}
+		
+		\subsection{Considerazioni metodologiche}
+			La scelta di utilizzare \texttt{/dev/urandom} consente di ottenere sequenze a distribuzione approssimativamente uniforme, evitando pattern ripetuti che avrebbero potuto influenzare i tempi di ordinamento.
+			Inoltre, la generazione diretta a livello binario garantisce efficienza e scalabilità, permettendo di produrre dataset di dimensioni elevate senza overhead computazionale aggiuntivo.
+	
+	\section{Algoritmo Sequenziale di Manber-Myers}
+		La prima implementazione sviluppata è di tipo sequenziale e costituisce la baseline per il confronto con le versioni parallele.
+		L'obiettivo è fornire una misura di riferimento in termini di correttezza e prestazioni, su cui valutare i benefici delle successive ottimizzazioni.
+		
+		Il codice è suddiviso in tre file principali:
+		\begin{itemize}
+			\item \texttt{suffix\_array.h}: definizione delle strutture dati e delle funzioni pubbliche per la costruzione del SA e del LCP;
+			\item \texttt{suffix\_array.cpp}: implementazione delle funzioni secondo l'algoritmo di Manber-Myers e l'algoritmo di Kasai;
+			\item \texttt{seq\_main.cpp}: programma principale che gestisce il caricamento del file di input, invoca gli algoritmi e stampa i risultati.
+		\end{itemize}
+		
+		\subsection{Strutture dati}
+			Il suffix array è rappresentato da un vettore di interi \texttt{sa} di lunghezza $n$, contenente gli indici di partenza dei suffissi ordinati.
+			Sono inoltre utilizzate strutture ausiliarie $O(n)$:
+			\begin{itemize}
+				\item \texttt{rank}: vettore di interi con il rango corrente del suffisso che inizia in $i$ (inverso di \texttt{sa});
+				\item \texttt{lcp}: vettore di interi per le lunghezze dei prefissi comuni massimi tra suffissi consecutivi in \texttt{sa};
+				\item \texttt{cnt} e \texttt{next}: workspace per il conteggio per-bucket e per le posizioni di scrittura nel raffinamento;
+				\item \texttt{bh} e \texttt{b2h}: vettori booleani per marcare rispettivamente le teste dei bucket correnti e le nuove teste dopo un passo di raffinamento.
+			\end{itemize}
+			
+			\subsubsection*{Footprint lineare}
+				Oltre a \texttt{text} (byte dell'input), i vettori \texttt{sa}, \texttt{rank}, \texttt{cnt}, \texttt{next}, \texttt{lcp} richiedono ciascuno $4n$ byte (interi a 32 bit), per un totale di circa $20n$ byte, cui si sommano i due vettori booleani bit-compattati.
+		
+		\subsection{Fasi dell'algoritmo (doubling)}
+			L'implementazione segue il \emph{doubling} con raffinamento per \emph{bucket} usando i vettori ausiliari \texttt{cnt}, \texttt{next} e i marcatori \texttt{bh}/\texttt{b2h}:
+			\begin{enumerate}
+				\item \textbf{Inizializzazione.}
+				Si inizializza \texttt{sa[i]=i} e si ordina \texttt{sa} per \texttt{text[i]}.
+				Si costruiscono i \emph{bucket} iniziali (suffissi con lo stesso primo byte), marcando le teste in \texttt{bh}, e si assegna \texttt{rank} coerentemente.
+				\item \textbf{Ciclo di raddoppio.} Per $h \in \{1,2,4,\dots\}$ si ripete finché tutti i ranghi sono distinti:
+				\begin{enumerate}
+					\item \textbf{Preparazione delle teste di bucket.}
+					Per ogni testa \texttt{bh}, si azzera \texttt{cnt} e si calcolano le posizioni di scrittura \texttt{next} (prefisso cumulato per-bucket).
+					\item \textbf{Pre-posizionamento dei suffissi corti.}
+					Si inseriscono per primi gli indici $i \in [n-h, n)$ nelle posizioni di testa dei rispettivi bucket (in base a \texttt{rank[i]}).
+					Questi sono i suffissi per cui il “secondo rango” sarebbe mancante; il loro trattamento anticipato equivale ad assegnare implicitamente una sentinella $-1$ \emph{senza} memorizzarla.
+					\item \textbf{Raffinamento stabile per-bucket.}
+					Si scansiona l'array \texttt{sa} nell'ordine corrente (che riflette il secondo rango crescente) e, per ciascun elemento $t$, si pone $j=\texttt{sa}[t]-h$.
+					Se $j \ge 0$, si inserisce $j$ nella prossima posizione disponibile del suo bucket:
+					$\texttt{sa2[next[rank[j]]]} \leftarrow j$ e $\texttt{next[rank[j]]} \leftarrow \texttt{next[rank[j]]} + 1$.
+					Questo realizza un ordinamento per coppie $(\texttt{rank}[j], \texttt{rank}[j+h])$ \emph{senza} costruire esplicitamente le coppie e senza confronti fuori-bordo.
+					\item \textbf{Ricalcolo dei ranghi e nuove teste.}
+					Si copia \texttt{sa2} in \texttt{sa}, quindi si scansiona \texttt{sa} e si aggiorna \texttt{rank}:
+					si marca una nuova testa in \texttt{b2h} quando la coppia di ranghi tra posizioni adiacenti cambia; altrimenti si \emph{propaga} il rango.
+					Si pone \texttt{bh} \(\leftarrow\) \texttt{b2h}.
+					\item \textbf{Criterio di arresto.}
+					Se $\texttt{rank}[\texttt{sa}[n-1]] = n-1$ tutti i bucket hanno ranghi distinti e l'ordinamento è completo.
+				\end{enumerate}
+			\end{enumerate}
+			
+			\subsubsection*{Note implementative}
+				L'array \texttt{sa2} non è utilizzato nel codice effettivo, in quanto viene effettuata una sostituzione \textit{in-place}.
+				L'utilizzo di tale vettore nel flusso appena descritto è da intendersi come puramente didattico. \\
+				La procedura sopra descritta, inoltre, è equivalente all'ordinamento delle coppie $(\texttt{rank}[i], \texttt{rank}[i+h])$:
+				\begin{itemize}
+						\item il passo di pre-posizionamento implementa la sentinella $-1$ per i suffissi con $i+h \ge n$;
+						\item la scansione di \texttt{sa} in ordine corrente garantisce la stabilità rispetto al “secondo rango”;
+						\item il posizionamento tramite \texttt{next} e il ricalcolo di \texttt{rank} e \texttt{b2h} realizzano il raffinamento per “primo rango”.
+				\end{itemize}
+		
+		\subsection{Algoritmo di Kasai per l'LCP}
+			Dati \texttt{sa} e il suo inverso \texttt{rank}, l'array \texttt{lcp} è calcolato in $O(n)$:
+			\begin{enumerate}
+				\item si mantiene una variabile $h$ (lunghezza corrente del match) che non viene azzerata a ogni passo;
+				\item per $i$ con \texttt{rank[i] > 0}, si confronta il suffisso in $i$ con quello precedente in ordine lessicografico, \texttt{j = sa[rank[i]-1]}, prolungando il match finché \texttt{text[i+h] = text[j+h]};
+				\item si assegna \texttt{lcp[rank[i]] = h} e, se $h>0$, si decrementa $h$ di 1 prima di passare a $i+1$ (\emph{riuso} del prefisso comune).
+			\end{enumerate}
+		
+		\subsection{Flusso di esecuzione}
+			Il flusso sequenziale è il seguente:
+			\begin{enumerate}
+				\item caricamento del dataset binario in memoria (\texttt{text});
+				\item costruzione di \texttt{sa} mediante Manber-Myers;
+				\item calcolo di \texttt{lcp} con Kasai;
+				\item estrazione della \emph{Longest Repeated Substring} come $\max_k \texttt{lcp}[k]$.
+			\end{enumerate}
+		
+		\subsection{Analisi di complessità}
+			\begin{itemize}
+				\item \textbf{Tempo.} Manber-Myers esegue $O(\log n)$ iterazioni di raffinamento; ogni iterazione è $O(n)$ grazie al conteggio per-bucket e alla scansione sequenziale, dunque la complessità totale è $O(n \log n)$. Kasai è $O(n)$.
+				\item \textbf{Memoria.} Oltre a \texttt{text}, lo spazio ausiliario è $O(n)$: \texttt{sa}, \texttt{rank}, \texttt{lcp}, \texttt{cnt}, \texttt{next}, \texttt{bh}, \texttt{b2h}.
+			\end{itemize}
+		
+		\subsection{Note implementative e casi limite}
+			\begin{itemize}
+				\item \textbf{Input binari.} I confronti lessicografici si effettuano su byte non firmati (\texttt{uint8\_t}); ciò assicura l'ordine corretto su valori $[0,255]$ e la corretta gestione dei byte \texttt{NUL}.
+				\item \textbf{Sentinella.} Nel confronto della coppia $(\texttt{rank}[i], \texttt{rank}[i+h])$, per $i+h \ge n$ si usa un rango sentinella (es.\ $-1$) inferiore a qualunque rango valido, così da posizionare in coda i suffissi più corti.
+				\item \textbf{Stabilità.} Il raffinamento per-bucket deve preservare la stabilità rispetto al primo rango; l'uso di \texttt{next} e \texttt{cnt} realizza una forma di counting-stable per il secondo rango.
+				\item \textbf{Arresto precoce.} La verifica \mbox{$\texttt{rank}[\texttt{sa}[n-1]] = n-1$} consente di interrompere il ciclo quando tutti i bucket sono di cardinalità unitaria.
+			\end{itemize}
+	
+	\section{Validazione}
+		La correttezza del SA viene verificata controllando che per indici consecutivi $i<j$ valga $S[\texttt{sa}[i]..] \le S[\texttt{sa}[j]..]$ in ordine lessicografico.
+		La correttezza dell'LCP si accerta verificando che, per $k>0$, risulti $\,\texttt{lcp}[k] = \text{lcp}(S[\texttt{sa}[k]..], S[\texttt{sa}[k-1]..])$.
+		L'individuazione della \emph{Longest Repeated Substring} (LRS) si ottiene come $\max_k \texttt{lcp}[k]$; oltre alla lunghezza, si riporta la posizione nell'array dei suffissi e una stampa esadecimale dei byte corrispondenti.

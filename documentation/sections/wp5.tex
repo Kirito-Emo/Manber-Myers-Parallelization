@@ -1,0 +1,250 @@
+\chapter{WP5 - Parallelizzazione su GPU con CUDA}
+	
+	Questo work package introduce la parallelizzazione su GPU dell'algoritmo mediante \textbf{CUDA}.
+	Si distinguono due varianti: \emph{single-stream} e \emph{multi-stream (MS)}.
+	La costruzione del SA è svolta integralmente su GPU, il calcolo dell'array LCP (Kasai) rimane su CPU, in quanto lineare e non dominante rispetto al SA\@.
+	Questa versione parallelizzata fa uso di \texttt{Thrust} per le primitive di \emph{sorting}, \emph{scan} e \emph{gather}, oltre a kernel CUDA personalizzati per le operazioni di inizializzazione, marcatura dei gruppi e \emph{scatter} dei ranghi.
+	
+	\section{Versione single-stream}
+		
+		\subsection{Struttura del codice}
+			\begin{itemize}
+				\item \texttt{suffix\_array\_cuda.h}: interfaccia pubblica in namespace \texttt{cuda\_sa} con struttura \texttt{Metrics} (tempi H/D) e overload utili per vettori host.
+				\item \texttt{suffix\_array\_cuda.cu}: implementazione della costruzione SA su GPU (\texttt{build\_suffix\_array\_cuda}), kernel CUDA (\texttt{k\_init\_ranks}, \texttt{k\_build\_key\_r2}, \texttt{k\_mark\_groups\_by\_rank\_u8}, \texttt{k\_scatter\_ranks}) e uso di primitive Thrust.
+				\item \texttt{cuda\_main.cpp}: driver host I/O file, invocazione SA su GPU, calcolo LCP su CPU, ricerca LRS con \emph{tie-breaking} deterministico, reporting di metriche e velocità.
+			\end{itemize}
+		
+		\subsection{Algoritmo e mappatura su GPU}
+			L'algoritmo segue il paradigma del \emph{doubling} in cui, ad ogni iterazione $k$, i suffissi sono ordinati secondo le coppie di ranghi:
+			\[
+				\big(r_1(i)=\texttt{rank}[i],\; r_2(i)=\texttt{rank}[i+k]\big),
+			\]
+			con sentinella per $r_2(i)$ quando $i+k \ge n$.
+			La versione CUDA realizza ogni iterazione con la sequenza:
+			\begin{enumerate}
+				\item \textbf{Inizializzazione ranghi}
+				Kernel \texttt{k\_init\_ranks} per porre \(\texttt{rank}[i] \leftarrow \texttt{text}[i]\) (byte $\in [0,255]$).
+				
+				\item \textbf{Costruzione di SA iniziale}
+				\texttt{thrust::sequence} su \texttt{d\_sa} per ottenere \([0,\dots,n{-}1]\).
+				
+				\item \textbf{Ordinamento stabile per secondo rango $r_2$}
+				\begin{itemize}
+					\item Kernel \texttt{k\_build\_key\_r2}: genera chiavi 32-bit \(\texttt{key}[i] \leftarrow \texttt{rank}[i{+}k]{+}1\) (oppure \(0\) se \(i{+}k\ge n\)) così che la sentinella risulti minima.
+					\item \texttt{thrust::stable\_sort\_by\_key(d\_key, d\_sa)}: ordina gli indici di suffisso in base a \(r_2\).
+				\end{itemize}
+				
+				\item \textbf{Ordinamento stabile per primo rango $r_1$}
+				\begin{itemize}
+					\item \texttt{thrust::gather(d\_sa, d\_rank, d\_key)} per costruire le chiavi \(r_1\) nell'ordine attuale di \texttt{sa}.
+					\item \texttt{thrust::stable\_sort\_by\_key(d\_key, d\_sa)}: ordina stabilmente per \(r_1\), preservando la stabilità rispetto a \(r_2\).
+					Il risultato è l'ordinamento per coppie \((r_1,r_2)\) \emph{senza} materializzare le coppie stesse.
+				\end{itemize}
+				
+				\item \textbf{Marcatura delle frontiere di gruppo}
+				Kernel \texttt{k\_mark\_groups\_by\_rank\_u8} confronta \((r_1,r_2)\) dei suffissi adiacenti in \texttt{sa} e pone \(\texttt{flags}[0]{=}0\) e i restanti \(\texttt{flags}[i]{=}1\) quando cambia almeno uno dei due ranghi.
+				
+				\item \textbf{Assegnazione dei nuovi ranghi}
+				\begin{itemize}
+					\item \texttt{thrust::transform(d\_flags, d\_rank\_scan, u8\,$\to$\,int)} e \texttt{thrust::exclusive\_scan} su \texttt{d\_rank\_scan}: produce gli \emph{ID di gruppo} (0, 1, 2, \dots).
+					\item Kernel \texttt{k\_scatter\_ranks}: \(\texttt{new\_rank}[\texttt{sa}[i]] \leftarrow \texttt{rank\_scan}[i]\).
+					\item \texttt{thrust::reduce(thrust::maximum)} su \texttt{d\_new\_rank} per determinare \(\max\_r\).
+					Se \(\max\_r = n{-}1\), tutti i ranghi sono distinti quindi l'algoritmo si ferma.
+					\item \texttt{swap(d\_rank, d\_new\_rank)} per l’iterazione successiva con \(k \leftarrow 2k\).
+				\end{itemize}
+			\end{enumerate}
+			L'uso combinato di \emph{due sort stabili} (per \(r_2\) e poi per \(r_1\)) è equivalente a un sort per la coppia \((r_1,r_2)\) ed evita la costruzione esplicita di un array di coppie.
+			La sentinella su \(r_2\) è realizzata via \(\texttt{rank[i{+}k]{+}1}\) (con 0 per indici fuori range), rendendo i suffissi più corti correttamente minori.
+		
+		\subsection{Dettagli implementativi}
+			
+			\subsubsection*{Kernel CUDA e configurazione}
+				\begin{itemize}
+						\item \textbf{Griglia:} blocchi da 256 thread (\texttt{BLOCK=256}); griglia \(\lceil n/256 \rceil\).
+						\item \textbf{Kernel:}
+						\texttt{k\_init\_ranks} (caricamento byte$\to$rank),
+						\texttt{k\_build\_key\_r2} (chiavi secondarie 32-bit con sentinella),
+						\texttt{k\_mark\_groups\_by\_rank\_u8} (flag tra adiacenti in SA),
+						\texttt{k\_scatter\_ranks} (scrittura dei nuovi ranghi in ordine).
+						\item \textbf{Cronometria GPU:} \texttt{cudaEventRecord} / \texttt{cudaEventElapsedTime} su stream di default (single-stream).
+				\end{itemize}
+			
+			\subsubsection*{Primitive Thrust}
+				\begin{itemize}
+						\item \texttt{sequence} per inizializzare SA come \([0,\dots,n{-}1]\);
+						\item \texttt{stable\_sort\_by\_key} per ordinamenti stabili su chiavi intere (\(r_2\) e poi \(r_1\)); per chiavi a 32 bit Thrust usa tipicamente una variante \emph{radix}, con costo lineare in numero di elementi;
+						\item \texttt{gather} per mappare \(r_1\) nell'ordine corrente di \texttt{sa};
+						\item \texttt{transform} (\(u8\to int\)) e \texttt{exclusive\_scan} per ottenere ID di gruppo crescenti.
+				\end{itemize}
+			
+			\subsubsection*{Metriche raccolte}
+				La struttura \texttt{cuda\_sa::Metrics} rileva:
+				\begin{itemize}
+						\item \(\texttt{h\_alloc\_s}\): tempo host per allocazioni/inizializzazioni (inclusa allocazione dei buffer device).
+						\item \(\texttt{h\_h2d\_s}\) e \(\texttt{h\_d2h\_s}\): copie Host\(\to\)Device e Device\(\to\)Host.
+						\item \(\texttt{gpu\_kernel\_s}\): tempo totale kernel (da evento GPU start a stop) che include tutte le iterazioni del \emph{doubling} e le primitive Thrust invocate sullo stream di default.
+				\end{itemize}
+				Il \texttt{main} (\texttt{cuda\_main.cpp}) combina \(\texttt{gpu\_kernel\_s}\) con il tempo di Kasai su CPU (\(\texttt{time\_lcp\_cpu}\)) per \(\texttt{time\_compute\_pure}\), e riporta throughput, speedup ed efficienza rispetto alla baseline sequenziale.
+			
+			\subsubsection*{Footprint di memoria su device}
+				Sono allocati i seguenti vettori sul \emph{device}:
+				\vspace{5mm}
+				\begin{center}
+						\centering
+						\begin{tabular}{| c | c |}
+							\hline
+							\textbf{Vettore} & \textbf{Size} \\
+							\hline
+							\texttt{d\_text}        & n\text{B}     \\ \hline
+							\texttt{d\_rank}        & 4n\text{B}    \\ \hline
+							\texttt{d\_new\_rank}   & 4n\text{B}    \\ \hline
+							\texttt{d\_sa}          & 4n\text{B}    \\ \hline
+							\texttt{d\_rank\_scan}  & 4n\text{B}    \\ \hline
+							\texttt{d\_key32}       & 4n\text{B}    \\ \hline
+							\texttt{d\_flags}       & n\text{B}     \\
+							\hline
+						\end{tabular}
+						\label{tab:vectors_gpu}
+				\end{center}
+				\vspace{5mm}
+				Il totale è $\approx (1{+}1) n + 5 \cdot 4n \simeq 22n$ byte, cui si somma l'overhead dei container Thrust.
+		
+		\subsection{Flusso di esecuzione end-to-end}
+			\begin{enumerate}
+				\item \textbf{I/O host:} lettura del file binario (\texttt{cuda\_main.cpp}).
+				\item \textbf{SA su GPU:} chiamata a \texttt{build\_suffix\_array\_cuda} con riempimento delle metriche.
+				\item \textbf{LCP su CPU:} \texttt{build\_lcp(text, sa, rk, lcp)} (Kasai).
+				\item \textbf{LRS:} ricerca del massimo in \texttt{lcp} con \emph{tie-breaking} deterministico (\emph{plateau-aware}, minima posizione nel testo).
+				\item \textbf{Report:} tempi \(\texttt{time\_io}\), \(\texttt{time\_alloc\_host\_dev}\), \(\texttt{time\_h2d}\), \(\texttt{time\_kernel\_gpu}\), \(\texttt{time\_lcp\_cpu}\), \(\texttt{time\_d2h}\); \(\texttt{throughput}\), \(\texttt{speedup}\), \(\texttt{efficiency}\), \(\texttt{memory\_overhead\_ratio}\).
+			\end{enumerate}
+		
+		\subsection{Analisi di complessità}
+			\begin{itemize}
+				\item \textbf{Per iterazione di doubling:} Due \texttt{stable\_sort\_by\_key} su chiavi intere 32-bit.
+				Con backend \emph{radix}, il costo è $O(n)$ per sort; con due sort \(\Rightarrow O(n)\) per iterazione.
+				\item \textbf{Numero di iterazioni:} \(\Theta(\log n)\) (raddoppio di \(k\)).
+				\item \textbf{Totale SA su GPU:} \(\;O(n \log n)\).
+				\item \textbf{LCP (Kasai) su CPU:} \(\;O(n)\).
+				\item \textbf{Overhead H/D:} Copie lineari \(O(n)\) H\(\to\)D e D\(\to\)H\@.
+			\end{itemize}
+			Dal punto di vista pratico, il costo dominante è la sequenza di ordinamenti; l’uso di sort \emph{radix}-like consente throughput elevati, ma resta sensibile alla banda di memoria globale e alla località dei carichi indiretti (\texttt{gather}).
+		
+		\subsection{Note di implementazione}
+			\begin{itemize}
+				\item \textbf{Sentinella coerente:} La mappatura \(r_2 = \texttt{rank}[i{+}k]{+}1\) e \(0\) per \(i{+}k \ge n\) preserva l'ordine atteso, infatti i suffissi più corti risultano minori quando condividono il prefisso con quelli più lunghi.
+				\item \textbf{Doppio sort stabile:} L'ordine finale per \((r_1,r_2)\) è garantito dalla stabilità, poiché prima si ordina per \(r_2\), poi per \(r_1\) preservando il primo criterio.
+				\item \textbf{Aggiornamento dei ranghi:} La pipeline \(\texttt{flags}\rightarrow\texttt{exclusive\_scan}\rightarrow\texttt{scatter}\) assegna ID di gruppo crescenti (0,1,\dots); \(\max(\texttt{new\_rank}){=}n{-}1\) è la condizione per la terminazione.
+				\item \textbf{Input binari:} I confronti lessicografici operano su byte \textit{unsigned}; l’inizializzazione dei ranghi da \(\texttt{uint8\_t}\) evita ambiguità tra valori \([0,255]\).
+			\end{itemize}
+		
+		\subsection{Note sulle prestazioni}
+			\begin{itemize}
+				\item \textbf{Coalescenza e accessi indiretti:} \texttt{gather(sa, rank, key)} introduce accessi indiretti su \texttt{rank}; l'impatto è mitigato dall'elevata banda della GPU ma resta un fattore di efficienza.
+				\item \textbf{Dimensione blocco:} \texttt{BLOCK=256} è un compromesso standard; su GPU diverse si può effettuare un tuning (128/256/512) in base all'occupancy e alla latenza di memoria.
+				\item \textbf{Bottleneck:} il tempo del kernel aggrega anche i sort Thrust (che operano sullo stream di default); l’ottimizzazione principale, per dataset molto grandi, riguarda la riduzione dei passaggi di sort e il riuso di buffer.
+			\end{itemize}
+		
+		\subsection{Validazione}
+			La correttezza è verificata confrontando:
+			\begin{itemize}
+				\item l’ordinamento dei suffissi prodotto da SA-GPU con l’ordine lessicografico atteso;
+				\item l'identità del LCP (Kasai-CPU) rispetto alla baseline;
+				\item la LRS (lunghezza e posizione) rispetto alla baseline.
+			\end{itemize}
+			Le differenze possono emergere solo come \emph{tie-breaking} tra suffissi uguali (non determinante ai fini di LCP/LRS), essendo l'ordinamento \emph{stabile} per le chiavi di rango.
+	
+	\section{Versione multi-stream}
+		
+		La variante \textbf{multi-stream} è stata progettata per sfruttare più stream CUDA, in modo da eseguire in concorrenza le fasi di ordinamento sui ranghi parziali. Nella fase finale, però, si è riscontrato un aspetto critico: l’uso di un \emph{merge gerarchico a coppie} (come inizialmente previsto) produceva talvolta suffix array corrotti, con conseguenti incongruenze nell’LCP e quindi LRS non corrette.
+		
+		Per garantire la correttezza, nella release finale è stata adottata una strategia più deterministica: dopo le fasi di ordinamento per-chunk su stream distinti, si esegue un unico \texttt{stable\_sort} globale con comparatore \texttt{SAKeyLess\{rank,n,k\}}.
+		In questo modo:
+		\begin{itemize}
+			\item si preserva l’ordinamento lessicografico per coppie $(r_1,r_2)$ in maniera robusta;
+			\item si elimina il rischio di corruzione dei risultati, che si manifestava con merge a onde non deterministici;
+			\item si mantiene comunque un certo grado di parallelismo intra-iterazione (sort per-chunk concorrenti) prima della fusione globale.
+		\end{itemize}
+		
+		\subsection{Struttura del codice}
+			\begin{itemize}
+				\item \texttt{suffix\_array\_cuda\_ms.h}: API \texttt{cuda\_sa\_ms::build\_suffix\_array\_cuda\_ms} con selezione del numero di stream e raccolta di metriche (\texttt{MetricsMS}).
+				\item \texttt{suffix\_array\_cuda\_ms.cu}: implementazione del \emph{doubling} con suddivisione in chunk, ordinamenti concorrenti per-chunk, ordinamento globale deterministico con \texttt{stable\_sort} e comparatore \texttt{SAKeyLess}.
+				\item \texttt{cuda\_ms\_main.cpp}: driver host con parsing \texttt{--streams}, I/O, invocazione della build multi-stream, LCP/LRS su CPU e reporting.
+			\end{itemize}
+		
+		\subsection{Partizionamento in chunk e creazione degli stream}
+			Il testo di lunghezza $n$ è suddiviso in $S$ chunk quasi uniformi mediante:
+			\[
+				\texttt{compute\_chunks}(n,S) \Rightarrow \{\texttt{offs}[s],\, \texttt{lens}[s]\}_{s=0}^{S-1},\qquad
+				\sum_s \texttt{lens}[s] = n.
+			\]
+			Si creano $S$ stream non bloccanti con \texttt{cudaStreamCreateWithFlags(..., cudaStreamNonBlocking)} e si associano le invocazioni \texttt{thrust} alla policy \texttt{thrust::cuda::par.on(st[s])}.
+			Le allocazioni del \emph{device} includono: \texttt{d\_sa\_A} (array SA unico), \texttt{d\_rank}, \texttt{d\_new\_rank}, \texttt{d\_rank\_scan}, \texttt{d\_flags} e \texttt{d\_key32}.
+		
+		\subsection{Pipeline di un'iterazione di \emph{doubling}}
+			Ogni iterazione per $k=1,2,4,\dots$ esegue:
+			\begin{enumerate}
+				\item \textbf{Seed SA} con \texttt{thrust::sequence(d\_sa\_A)}.
+				\item \textbf{Chiavi $r_2$ per chunk}: il kernel \texttt{k\_build\_key\_r2\_range} genera le chiavi $r_2$ per ciascun chunk su stream separati.
+				\item \textbf{Sort per $r_2$ e per $r_1$} su ciascun chunk con \texttt{stable\_sort\_by\_key}, in stream distinti.
+				\item \textbf{Ordinamento globale} con \texttt{thrust::stable\_sort} su tutto $d\_sa$, usando il comparatore \texttt{SAKeyLess\{rank,n,k\}}.
+				\item \textbf{Aggiornamento ranghi}:
+				\begin{itemize}
+					\item \texttt{k\_mark\_groups\_by\_rank\_u8}: flag tra adiacenti in SA quando cambia $(r_1,r_2)$;
+					\item \texttt{exclusive\_scan} $\Rightarrow$ ID di gruppo crescenti in \texttt{d\_rank\_scan};
+					\item \texttt{k\_scatter\_ranks}: scrive i nuovi ranghi;
+					\item \texttt{reduce(max)} su \texttt{new\_rank} per l’arresto anticipato.
+				\end{itemize}
+			\end{enumerate}
+			La misurazione \emph{GPU-only} (\texttt{gpu\_kernel\_s}) avvolge l’intero ciclo di \emph{doubling}, inclusi i sort Thrust concorrenti e lo stable\_sort globale.
+		
+		\subsection{Validazione dell'output}
+			Prima della copia D$\to$H, un kernel \texttt{k\_validate\_sa} controlla che il SA risultante sia una permutazione di $[0,\dots,n{-}1]$, senza valori duplicati o fuori range.
+			Questa validazione è stata cruciale perché l’approccio iniziale con merge a coppie portava a corruzioni silenziose del SA (e quindi di LCP e LRS), risolte totalmente poi con lo \texttt{stable\_sort} globale.
+		
+		\subsection{Metriche e reporting}
+			La struttura \texttt{MetricsMS} riporta:
+			\begin{itemize}
+				\item \(\texttt{h\_alloc\_s}\): tempo di allocazioni/inizializzazioni host+device;
+				\item \(\texttt{h\_h2d\_s}\), \(\texttt{h\_d2h\_s}\): copie H$\to$D e D$\to$H;
+				\item \(\texttt{gpu\_kernel\_s}\): tempo aggregato GPU di \emph{doubling}+sort;
+				\item \(\texttt{streams\_used}\): numero di stream usati.
+			\end{itemize}
+			Il \texttt{main} (\texttt{cuda\_ms\_main.cpp}) calcola \(\texttt{time\_compute\_pure} = \texttt{gpu\_kernel\_s} + \texttt{time\_lcp\_cpu}\), throughput, speedup, efficiency e \texttt{memory\_overhead\_ratio}.
+		
+		\subsection{Complessità e scalabilità}
+			\begin{itemize}
+				\item \textbf{Per iterazione:} due sort stabili per-chunk su chiavi 32-bit ($O(\texttt{len}_s)$) più ordinamento globale $O(n \log n)$.
+				\item \textbf{Numero iterazioni:} $\Theta(\log n)$ come nel \emph{doubling}.
+				\item \textbf{Totale:} $O(n \log n)$, con accelerazione pratica grazie ai sort per-chunk concorrenti e alla parallelizzazione GPU\@.
+			\end{itemize}
+		
+		\subsection{Note di implementazione}
+			\begin{itemize}
+				\item \textbf{Determinismo} L’uso di \texttt{stable\_sort\_by\_key} per-chunk e dello stable\_sort globale garantisce riproducibilità.
+				\item \textbf{Comparatore globale} \texttt{SAKeyLess\{rank,n,k\}} confronta i ranghi $(r_1,r_2)$ su device, assicurando correttezza anche tra chunk diversi.
+				\item \textbf{Parametri CUDA} I kernel usano blocchi da 256 thread; le variabili sono per-thread, i vettori Thrust sono condivisi tra stream ma con accessi disgiunti.
+			\end{itemize}
+		
+		\subsection{Footprint di memoria su device}
+			Sono allocati: \texttt{d\_text} ($n$B), \texttt{d\_rank}, \texttt{d\_new\_rank}, \texttt{d\_rank\_scan}, \texttt{d\_sa\_A}, \texttt{d\_key32} (4nB ciascuno), \texttt{d\_flags} ($n$B).
+			Il totale è $\approx 22n$ byte, cui si aggiunge l’overhead dei buffer temporanei Thrust.
+		
+		\subsection{Confronto con single-stream}
+			\begin{itemize}
+				\item \textbf{Pro} Migliore utilizzo degli SM grazie alla concorrenza per-chunk.
+				\item \textbf{Contro} Maggior complessità gestionale e maggiore sensibilità a parametri come il numero di stream.
+				\item \textbf{Quando utilizzare} Per input grandi e GPU con molti SM e VRAM sufficiente; tipicamente $S\in[4,8]$.
+			\end{itemize}
+		
+		\subsection{Limitazioni e possibili estensioni}
+			\begin{itemize}
+				\item \textbf{Allocator Thrust} L’uso di un caching allocator ridurrebbe i costi di allocazione temporanea.
+				\item \textbf{Riduzione dei passaggi} Unire i due sort per-chunk in un unico radix su coppie $(r_1,r_2)$ (64 bit) ridurrebbe traffico globale.
+				\item \textbf{Overlap computazione/trasferimenti} Non implementato qui, ma possibile in varianti out-of-core.
+				\item \textbf{Merge più efficiente} Si potrebbe reintrodurre un merge gerarchico concorrente, ma solo se validato rigorosamente per evitare corruzione del SA\@.
+			\end{itemize}
+		
+		\subsection{Validazione}
+			La SA prodotta è validata su device come permutazione di $[0, \dots, n{-}1]$.
+			Sul lato host si calcola l’LCP (Kasai) e si ricava la LRS. Le verifiche di uguaglianza rispetto alla baseline confermano la correttezza.

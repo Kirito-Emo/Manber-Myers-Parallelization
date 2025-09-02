@@ -1,0 +1,82 @@
+\chapter{WP2 - Parallelizzazione con OpenMP}
+	
+	Questo work package introduce la parallelizzazione a memoria condivisa mediante \textbf{OpenMP}, mantenendo invariata la logica della baseline sequenziale.
+	L'obiettivo è ridurre il tempo di esecuzione intervenendo sulle porzioni a scansione lineare e sulle operazioni indipendenti per indice, lasciando sequenziali i passaggi con dipendenze dati intrinseche (ordinamento iniziale, calcolo dei bucket e parte centrale del raddoppio, ciclo principale di Kasai).
+	
+	\section{Struttura del codice}
+		La versione OpenMP riusa le stesse interfacce della baseline:
+		\begin{itemize}
+			\item \texttt{suffix\_array\_omp.cpp}: costruzione del SA (Manber-Myers) e dell'LCP (Kasai) con direttive \texttt{\#pragma omp} dove possibile;
+			\item \texttt{suffix\_array.h}: header comune;
+			\item \texttt{omp\_main.cpp}: programma principale, gestione I/O, calcolo metriche e confronto con baseline sequenziale.
+		\end{itemize}
+	
+	\section{Punti di parallelizzazione effettivi}
+		L'inserimento delle direttive segue un criterio conservativo: parallelizzare solo loop \emph{embarrassingly parallel} o con scritture disgiunte, evitando race condition.
+		
+		\subsection*{Costruzione del SA}
+			\begin{itemize}
+				\item \textbf{Inizializzazione di \texttt{sa}:} \texttt{\#pragma omp parallel for} su \texttt{sa[i]=i} (iterazioni indipendenti).
+				\item \textbf{Marcatura teste di bucket:} \texttt{\#pragma omp parallel for} per impostare \texttt{bh[i]} e azzerare \texttt{b2h[i]} (accessi disgiunti).
+				\item \textbf{Ciclo di raddoppio ($h=1,2,4,\dots$):}
+				\begin{itemize}
+					\item \emph{Ricostruzione di \texttt{sa} e aggiornamento \texttt{bh}:} \texttt{\#pragma omp parallel for} su due vettori in scrittura disgiunta: ($sa[rank[i]] = i$) e (\texttt{$bh[i] = bh[i] \lor b2h[i]$}).
+				\end{itemize}
+				\item \textbf{Rank inverso finale:} \texttt{\#pragma omp parallel for} su ($rank[sa[i]] = i$).
+			\end{itemize}
+		
+		\subsection*{Costruzione dell'LCP}
+			\begin{itemize}
+				\item \textbf{Inizializzazione del rank inverso}: \texttt{\#pragma omp parallel for} su ($rank[sa[i]] = i$).
+			\end{itemize}
+			L’inizializzazione del rank inverso è parallelizzata, mentre il ciclo principale di Kasai rimane sequenziale per via delle dipendenze su $h$.
+	
+	\section{Scelte di sincronizzazione e sicurezza}
+		Nel codice non sono dichiarate esplicitamente clausole \texttt{private} o \texttt{shared}, si fa affidamento sulle regole di default di OpenMP, le quali stabiliscono che:
+		\begin{itemize}
+			\item le variabili di loop (\texttt{i}, \texttt{j}, ecc.) sono rese automaticamente \emph{private};
+			\item i vettori allocati al di fuori della regione parallela (\texttt{text}, \texttt{sa}, \texttt{rank}, \texttt{bh}, \texttt{b2h}, \texttt{cnt}, \texttt{next}, \texttt{lcp}) sono \emph{shared};
+			\item le variabili dichiarate all’interno del corpo del loop (\texttt{s}, \texttt{head}, contatori temporanei) sono locali allo scope del thread e quindi \emph{private}.
+		\end{itemize}
+		
+		Questa combinazione consente di evitare race condition senza bisogno di ulteriori clausole in quanto i vettori condivisi sono sempre scritti in posizioni disgiunte, mentre gli indici e i temporanei sono gestiti in autonomia da ciascun thread.
+	
+	\section{Ricerca LRS}
+		La scansione della LRS su \texttt{lcp} è parallelizzata con una riduzione personalizzata:
+		\begin{enumerate}
+			\item ogni thread mantiene un \emph{record locale} (\texttt{local\_len}, \texttt{local\_i}, \texttt{local\_pos});
+			\item al termine del proprio blocco, il thread entra in una sezione \texttt{critical} per aggiornare il \emph{best globale} (\texttt{best\_len}, \texttt{best\_i}, \texttt{best\_pos}) rispettando i tie-break: massima lunghezza, poi indice LCP minimo, poi posizione SA minima;
+			\item la politica di scheduling è \texttt{static} (default esplicito nei \texttt{for}).
+		\end{enumerate}
+		
+		Questa scelta evita condizioni di race pur mantenendo costante l’ordine dei tie-break.
+	
+	\section{Gestione dei thread e parametri di runtime}
+		Il numero di thread effettivo è ricavato con \texttt{omp\_get\_max\_threads()} e riportato nel log, tuttavia può essere controllato dall'utente tramite il parametro \texttt{OMP\_NUM\_THREADS}.
+		Le misure temporali usano \texttt{omp\_get\_wtime()}.
+		Non sono presenti trasferimenti H$\leftrightarrow$D o comunicazioni di rete (\texttt{time\_transfers\_comm = 0}).
+	
+	\section{Flusso di esecuzione}
+		\begin{enumerate}
+			\item lettura del dataset binario (\texttt{text});
+			\item allocazione dei vettori di lavoro;
+			\item costruzione del SA e dell'LCP;
+			\item ricerca della LRS in parallelo;
+			\item calcolo delle metriche: \texttt{time\_compute\_pure = time\_sa + time\_lcp}, \texttt{time\_total\_compute}, \texttt{time\_alloc}, \texttt{memory\_overhead\_ratio}, \texttt{throughput} in MB/s.
+		\end{enumerate}
+		
+		Se disponibile, vengono caricati i valori medi della baseline sequenziale dal CSV (\texttt{seq\_summary}) per stimare \texttt{speedup} ed \texttt{efficiency} (calcolata come \texttt{$\frac{speedup}{num\_threads}$}).
+	
+	\section{Analisi di complessità e scalabilità}
+		\begin{itemize}
+			\item \textbf{Complessità asintotica}: invariata rispetto alla baseline ($O(n \log n)$ per SA, $O(n)$ per LCP).
+			\item \textbf{Accelerazione attesa}: i benefici derivano dai \texttt{for} in parallelizzazione pura (inizializzazione, ricostruzione SA, rank inverso, teste di bucket, LRS-scan).
+			La parte centrale del raddoppio rimane sequenziale; l'accelerazione globale è pertanto limitata dalla frazione seriale (legge di Amdahl).
+			\item \textbf{Bottleneck}: al crescere dei thread, la banda di memoria diventa il vincolo dominante sulle sezioni $O(n)$; oltre un certo numero di core, lo speedup tende a saturare.
+			\item \textbf{Memoria}: identica alla versione sequenziale ($O(n)$). Le strutture private dei thread sono trascurabili.
+		\end{itemize}
+	
+	\section{Validazione}
+		La versione OpenMP produce \texttt{sa} e \texttt{lcp} identici alla baseline, con LRS coincidente (uguale lunghezza e posizione).
+		La riproducibilità è facilitata dall'uso di dataset binari determinati per dimensione e dal confronto con la baseline (\texttt{seq\_summary.csv}).
+		Il report a console include: dimensione input, numero di thread, tempi parziali (\texttt{time\_io}, \texttt{time\_alloc}, \texttt{time\_sa}, \texttt{time\_lcp}, \texttt{time\_lrs\_scan}), throughput, speedup ed efficiency quando disponibile la baseline.
