@@ -9,7 +9,9 @@
 /perf-stats/mpi_measurements/2r/massif_mpi_2r_500MB.out
 /perf-stats/mpi_measurements/4r/massif_mpi_4r_500MB.out
 /perf-stats/mpi_measurements/8r/massif_mpi_8r_500MB.out
+/perf-stats/mpi_omp_measurements/2r_4t/massif_mpi_omp_2r_4t_500MB.out
 /perf-stats/mpi_omp_measurements/2r_8t/massif_mpi_omp_2r_8t_500MB.out
+/perf-stats/mpi_omp_measurements/4r_2t/massif_mpi_omp_4r_2t_500MB.out
 /perf-stats/mpi_omp_measurements/4r_4t/massif_mpi_omp_4r_4t_500MB.out
 /perf-stats/mpi_omp_measurements/8r_2t/massif_mpi_omp_8r_2t_500MB.out
 /documentation/img/unisa.png

@@ -72,6 +72,14 @@ bash -c '[[ "$OMPI_COMM_WORLD_RANK" -eq 0 ]] && \
   OMP_NUM_THREADS=4 OMP_DYNAMIC=false OMP_PROC_BIND=spread OMP_PLACES=cores exec ../cmake-build-release/hpc_mpi_omp 500'
 ms_print ./mpi_omp_measurements/4r_4t/massif_mpi_omp_4r_4t_500MB.out > ./mpi_omp_measurements/4r_4t/mpi_omp_rank0_4r_4t_500MB_mem_profile.txt
 
+# 4 ranks, 2 threads
+mpirun -np 4 --bind-to none -x FI_PROVIDER=tcp -x FI_OFI_RXM_USE_SRX=0 \
+bash -c '[[ "$OMPI_COMM_WORLD_RANK" -eq 0 ]] && \
+  OMP_NUM_THREADS=2 OMP_DYNAMIC=false OMP_PROC_BIND=spread OMP_PLACES=cores \
+  exec valgrind --tool=massif --stacks=yes --massif-out-file=./mpi_omp_measurements/4r_2t/massif_mpi_omp_4r_2t_500MB.out ../cmake-build-release/hpc_mpi_omp 500 || \
+  OMP_NUM_THREADS=2 OMP_DYNAMIC=false OMP_PROC_BIND=spread OMP_PLACES=cores exec ../cmake-build-release/hpc_mpi_omp 500'
+ms_print ./mpi_omp_measurements/4r_2t/massif_mpi_omp_4r_2t_500MB.out > ./mpi_omp_measurements/4r_2t/mpi_omp_rank0_4r_2t_500MB_mem_profile.txt
+
 # 2 ranks, 8 threads
 mpirun -np 2 --bind-to none -x FI_PROVIDER=tcp -x FI_OFI_RXM_USE_SRX=0 \
 bash -c '[[ "$OMPI_COMM_WORLD_RANK" -eq 0 ]] && \
@@ -79,6 +87,14 @@ bash -c '[[ "$OMPI_COMM_WORLD_RANK" -eq 0 ]] && \
   exec valgrind --tool=massif --stacks=yes --massif-out-file=./mpi_omp_measurements/2r_8t/massif_mpi_omp_2r_8t_500MB.out ../cmake-build-release/hpc_mpi_omp 500 || \
   OMP_NUM_THREADS=8 OMP_DYNAMIC=false OMP_PROC_BIND=spread OMP_PLACES=cores exec ../cmake-build-release/hpc_mpi_omp 500'
 ms_print ./mpi_omp_measurements/2r_8t/massif_mpi_omp_2r_8t_500MB.out > ./mpi_omp_measurements/2r_8t/mpi_omp_rank0_2r_8t_500MB_mem_profile.txt
+
+# 2 ranks, 4 threads
+mpirun -np 2 --bind-to none -x FI_PROVIDER=tcp -x FI_OFI_RXM_USE_SRX=0 \
+bash -c '[[ "$OMPI_COMM_WORLD_RANK" -eq 0 ]] && \
+  OMP_NUM_THREADS=4 OMP_DYNAMIC=false OMP_PROC_BIND=spread OMP_PLACES=cores \
+  exec valgrind --tool=massif --stacks=yes --massif-out-file=./mpi_omp_measurements/2r_4t/massif_mpi_omp_2r_4t_500MB.out ../cmake-build-release/hpc_mpi_omp 500 || \
+  OMP_NUM_THREADS=4 OMP_DYNAMIC=false OMP_PROC_BIND=spread OMP_PLACES=cores exec ../cmake-build-release/hpc_mpi_omp 500'
+ms_print ./mpi_omp_measurements/2r_4t/massif_mpi_omp_2r_4t_500MB.out > ./mpi_omp_measurements/2r_4t/mpi_omp_rank0_2r_4t_500MB_mem_profile.txt
 
 ##### CUDA #####
 echo ">>> Running cuda_measure.sh"

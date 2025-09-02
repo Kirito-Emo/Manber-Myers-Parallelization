@@ -11,7 +11,9 @@ RUNS=10
 
 # Pairs of (MPI ranks, OMP threads)
 CONFIGS=(
+  "2 4"
   "2 8"
+  "4 2"
   "4 4"
   "8 2"
 )

@@ -9,7 +9,6 @@
 #include <thrust/execution_policy.h>
 #include <thrust/functional.h>
 #include <thrust/gather.h>
-#include <thrust/merge.h>
 #include <thrust/reduce.h>
 #include <thrust/scan.h>
 #include <thrust/sequence.h>
@@ -173,15 +172,14 @@ namespace cuda_sa_ms
 
         // Device buffers
         thrust::device_vector<uint8_t> d_text(n);
-        thrust::device_vector<int> d_rank(n), d_new_rank(n);
-        thrust::device_vector<int> d_rank_scan(n);
+        thrust::device_vector<int> d_rank(n), d_new_rank(n), d_rank_scan(n);
         thrust::device_vector<unsigned char> d_flags(n); // 1-byte flags
-        thrust::device_vector<uint32_t> d_key32(n); // reused per pass
-        thrust::device_vector<int> d_sa_A(n), d_sa_B(n); // ping-pong SA
-
+        thrust::device_vector<uint32_t> d_key32(n); // 32-bit keys for stable sort
+        thrust::device_vector<int> d_sa_A(n); // Suffix Array (ping-pong)
         auto t_alloc1 = std::chrono::high_resolution_clock::now();
         m.h_alloc_s = std::chrono::duration<double>(t_alloc1 - t_alloc0).count();
 
+        // Copy H2D
         auto t_h2d0 = std::chrono::high_resolution_clock::now();
         CUDA_CHECK(cudaMemcpy(thrust::raw_pointer_cast(d_text.data()), h_text, n * sizeof(uint8_t),
                               cudaMemcpyHostToDevice));
@@ -212,12 +210,11 @@ namespace cuda_sa_ms
 
         // Start GPU measurement (after init ranks to exclude H->D & prime sync)
         CUDA_CHECK(cudaEventRecord(evStart, 0));
-        const int MAX_PARALLEL_MERGES = std::min(streams, 2); // Limit parallel merges to cap scratch usage
 
         // Doubling loop
         for (int k = 1;; k <<= 1)
         {
-            // Seed SA_A with [0..n-1]
+            // Init SA with [0..n-1]
             thrust::sequence(d_sa_A.begin(), d_sa_A.end());
 
             // Per-chunk two-pass stable sorting (r2 then r1)
@@ -261,97 +258,14 @@ namespace cuda_sa_ms
             for (int s = 0; s < streams; ++s)
                 CUDA_CHECK(cudaStreamSynchronize(st[s]));
 
-            // Pairwise merges of SA runs using comparator on ranks
-            bool in_A = true; // current runs live in SA_A
-            int runs = streams;
-            std::vector<int> cur_offs = offs, cur_lens = lens;
-
-            while (runs > 1)
+            // Global stable sort ensures correctness
             {
-                int pairs = runs / 2;
-
-                // Launch merges in waves to limit parallel scratch usage
-                int launched = 0;
-
-                for (int p = 0; p < pairs; ++p)
-                {
-                    int sidx = launched % std::max(1, MAX_PARALLEL_MERGES);
-                    auto pol = thrust::cuda::par.on(st[sidx]);
-
-                    int a = 2 * p, b = a + 1;
-                    int offA = cur_offs[a], lenA = cur_lens[a];
-                    int offB = cur_offs[b], lenB = cur_lens[b];
-
-                    auto saIn = in_A ? d_sa_A.begin() : d_sa_B.begin();
-                    auto saOut = in_A ? d_sa_B.begin() : d_sa_A.begin();
-
-                    // Comparator uses device pointer to rank and current k
-                    SAKeyLess cmp{thrust::raw_pointer_cast(d_rank.data()), n, k};
-
-                    // Merge two runs into output at offA
-                    thrust::merge(pol, saIn + offA, saIn + offA + lenA, saIn + offB, saIn + offB + lenB, saOut + offA,
-                                  cmp);
-
-                    ++launched;
-
-                    // Synchronize wave
-                    if (launched == MAX_PARALLEL_MERGES || p == pairs - 1)
-                    {
-                        for (int i = 0; i < launched; ++i)
-                            CUDA_CHECK(cudaStreamSynchronize(st[i]));
-                        launched = 0;
-                    }
-                }
-
-                // Odd run: copy-through into buffer that will be current on next level
-                if (runs % 2 == 1)
-                {
-                    int a = runs - 1;
-                    int offA = cur_offs[a], lenA = cur_lens[a];
-                    if (in_A)
-                    {
-                        CUDA_CHECK(cudaMemcpyAsync(thrust::raw_pointer_cast(d_sa_B.data()) + offA,
-                                                   thrust::raw_pointer_cast(d_sa_A.data()) + offA, sizeof(int) * lenA,
-                                                   cudaMemcpyDeviceToDevice, st[0]));
-                    }
-                    else
-                    {
-                        CUDA_CHECK(cudaMemcpyAsync(thrust::raw_pointer_cast(d_sa_A.data()) + offA,
-                                                   thrust::raw_pointer_cast(d_sa_B.data()) + offA, sizeof(int) * lenA,
-                                                   cudaMemcpyDeviceToDevice, st[0]));
-                    }
-
-                    CUDA_CHECK(cudaStreamSynchronize(st[0]));
-                }
-
-                // Build next level run list
-                std::vector<int> next_offs, next_lens;
-                next_offs.reserve((runs + 1) / 2);
-                next_lens.reserve((runs + 1) / 2);
-
-                for (int p = 0; p < pairs; ++p)
-                {
-                    int a = 2 * p, b = a + 1;
-                    next_offs.push_back(cur_offs[a]);
-                    next_lens.push_back(cur_lens[a] + cur_lens[b]);
-                }
-
-                if (runs % 2 == 1)
-                {
-                    int a = runs - 1;
-                    next_offs.push_back(cur_offs[a]);
-                    next_lens.push_back(cur_lens[a]);
-                }
-
-                cur_offs.swap(next_offs);
-                cur_lens.swap(next_lens);
-                runs = static_cast<int>(cur_offs.size());
-                in_A = !in_A; // outputs written to the opposite buffer
+                auto pol = thrust::cuda::par.on(st[0]);
+                thrust::stable_sort(pol, d_sa_A.begin(), d_sa_A.end(),
+                                    SAKeyLess{thrust::raw_pointer_cast(d_rank.data()), n, k});
             }
 
-            // Pick current SA buffer after merges
-            const int *sa_sorted =
-                    in_A ? thrust::raw_pointer_cast(d_sa_A.data()) : thrust::raw_pointer_cast(d_sa_B.data());
+            const int *sa_sorted = thrust::raw_pointer_cast(d_sa_A.data());
 
             // Mark flags, scan, scatter to new ranks
             k_mark_groups_by_rank_u8<<<gridN, BLOCK>>>(sa_sorted, thrust::raw_pointer_cast(d_rank.data()), n, k,
@@ -368,10 +282,7 @@ namespace cuda_sa_ms
             int max_rank = thrust::reduce(d_new_rank.begin(), d_new_rank.end(), -1, thrust::maximum<int>());
 
             d_rank.swap(d_new_rank);
-            if (max_rank == n - 1)
-                break;
-
-            if (k > n)
+            if (max_rank == n - 1 || k > n)
                 break;
         }
 
@@ -386,41 +297,26 @@ namespace cuda_sa_ms
 
         // Validation + D->H (host time)
         auto t_d2h0 = std::chrono::high_resolution_clock::now();
-        {
-            const int *sa_dev = thrust::raw_pointer_cast(d_sa_A.data());
+        const int *sa_dev = thrust::raw_pointer_cast(d_sa_A.data());
 
-            thrust::device_vector<unsigned char> d_seen(n);
-            thrust::device_vector<int> d_err(1), d_bad_i(1), d_bad_val(1);
+        thrust::device_vector<unsigned char> d_seen(n);
+        thrust::device_vector<int> d_err(1), d_bad_i(1), d_bad_val(1);
 
-            CUDA_CHECK(cudaMemset(thrust::raw_pointer_cast(d_seen.data()), 0, n * sizeof(unsigned char)));
-            CUDA_CHECK(cudaMemset(thrust::raw_pointer_cast(d_err.data()), 0, sizeof(int)));
+        CUDA_CHECK(cudaMemset(thrust::raw_pointer_cast(d_seen.data()), 0, n * sizeof(unsigned char)));
+        CUDA_CHECK(cudaMemset(thrust::raw_pointer_cast(d_err.data()), 0, sizeof(int)));
 
-            k_validate_sa<<<1, 1>>>(sa_dev, n, thrust::raw_pointer_cast(d_seen.data()),
-                                    thrust::raw_pointer_cast(d_err.data()), thrust::raw_pointer_cast(d_bad_i.data()),
-                                    thrust::raw_pointer_cast(d_bad_val.data()));
-            CUDA_CHECK(cudaDeviceSynchronize());
+        k_validate_sa<<<1, 1>>>(sa_dev, n, thrust::raw_pointer_cast(d_seen.data()),
+                                thrust::raw_pointer_cast(d_err.data()), thrust::raw_pointer_cast(d_bad_i.data()),
+                                thrust::raw_pointer_cast(d_bad_val.data()));
+        CUDA_CHECK(cudaDeviceSynchronize());
 
-            int h_err = 0;
-            CUDA_CHECK(cudaMemcpy(&h_err, thrust::raw_pointer_cast(d_err.data()), sizeof(int), cudaMemcpyDeviceToHost));
-            if (h_err != 0)
-            {
-                // Try alternate buffer before failing
-                sa_dev = thrust::raw_pointer_cast(d_sa_B.data());
-                CUDA_CHECK(cudaMemset(thrust::raw_pointer_cast(d_seen.data()), 0, n * sizeof(unsigned char)));
-                CUDA_CHECK(cudaMemset(thrust::raw_pointer_cast(d_err.data()), 0, sizeof(int)));
-                k_validate_sa<<<1, 1>>>(
-                        sa_dev, n, thrust::raw_pointer_cast(d_seen.data()), thrust::raw_pointer_cast(d_err.data()),
-                        thrust::raw_pointer_cast(d_bad_i.data()), thrust::raw_pointer_cast(d_bad_val.data()));
-                CUDA_CHECK(cudaDeviceSynchronize());
-                CUDA_CHECK(cudaMemcpy(&h_err, thrust::raw_pointer_cast(d_err.data()), sizeof(int),
-                                      cudaMemcpyDeviceToHost));
-                if (h_err != 0)
-                    throw std::runtime_error("Invalid SA after CUDA-MS.");
-            }
+        int h_err = 0;
+        CUDA_CHECK(cudaMemcpy(&h_err, thrust::raw_pointer_cast(d_err.data()), sizeof(int), cudaMemcpyDeviceToHost));
+        if (h_err != 0)
+            throw std::runtime_error("Invalid SA after CUDA-MS.");
 
-            h_sa.resize(n);
-            CUDA_CHECK(cudaMemcpy(h_sa.data(), sa_dev, n * sizeof(int), cudaMemcpyDeviceToHost));
-        }
+        h_sa.resize(n);
+        CUDA_CHECK(cudaMemcpy(h_sa.data(), sa_dev, n * sizeof(int), cudaMemcpyDeviceToHost));
 
         auto t_d2h1 = std::chrono::high_resolution_clock::now();
         m.h_d2h_s = std::chrono::duration<double>(t_d2h1 - t_d2h0).count();

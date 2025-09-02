@@ -1,0 +1,21 @@
+==PROF== Connected to process 834183 (/Manber-Myers-Parallelization/cmake-build-release/hpc_cuda)
+[CUDA] Input file: ../random_strings/string_500MB.bin | size: 24966095 bytes
+[Kasai-CPU] LCP built in 1.10571 s
+=== Suffix-Array + LCP (CUDA single-stream) ===
+time_io=0.018947 s
+time_alloc_host_dev=2.243541 s
+time_h2d=0.003680 s
+time_kernel_gpu=0.856799 s
+time_lcp_cpu=1.105710 s
+time_d2h=0.055009 s
+time_compute_pure=1.962510 s
+time_total_compute=4.206051 s
+time_transfers_comm=0.058689 s
+throughput=12.132181 MB/s
+speedup=3.570460
+efficiency=357.045959 %
+memory_overhead_ratio=54.736139 %
+[Result] LRS length=6   pos=9047674 (another occurrence at 17821940)
+LRS (hex): 34 E8 67 77 30 B0 
+==PROF== Disconnected from process 834183
+==PROF== Report: /Manber-Myers-Parallelization/perf-stats/cuda_profiles/cuda_500MB_profile.ncu-rep
